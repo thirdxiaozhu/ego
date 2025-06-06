@@ -2,7 +2,7 @@ import service from '@/utils/request'
 
 export const login = (data) => {
   return service({
-    url: '/qmUser/login',
+    url: '/ECU/login',
     method: 'post',
     data: data
   })
@@ -11,7 +11,7 @@ export const login = (data) => {
 
 export const register = (data) => {
   return service({
-    url: '/qmUser/register',
+    url: '/ECU/register',
     method: 'post',
     data: data
   })
@@ -20,7 +20,7 @@ export const register = (data) => {
 
 export const getUserInfo = () =>{
     return service({
-        url: '/qmUser/getUserInfo',
+        url: '/ECU/getUserInfo',
         method: 'get'
     })
 }
@@ -28,7 +28,7 @@ export const getUserInfo = () =>{
 
 export const logout = () =>{
   return service({
-    url: '/qmUser/logout',
+    url: '/ECU/logout',
     method: 'post'
   })
 }

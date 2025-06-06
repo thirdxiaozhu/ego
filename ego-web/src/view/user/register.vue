@@ -8,11 +8,11 @@
           :model="form"
           :rules="rules"
       >
-        <el-form-item prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
+        <el-form-item prop="userID">
+          <el-input v-model="form.userID" placeholder="请输入用户名"></el-input>
         </el-form-item>
-        <el-form-item prop="nickname">
-          <el-input v-model="form.nickname" placeholder="请输入用户昵称"></el-input>
+        <el-form-item prop="username">
+          <el-input v-model="form.username" placeholder="请输入用户昵称"></el-input>
         </el-form-item>
         <el-form-item prop="password">
           <el-input type="password" v-model="form.password" placeholder="请输入密码"></el-input>
@@ -40,9 +40,9 @@ import {ElMessage} from "element-plus";
 const router = useRouter()
 
 const form = ref({
+  userID: '',
   username: '',
-  password: '',
-  rePassword: ''
+  password: ''
 })
 
 const validatePass = (rule, value, callback) => {
@@ -54,13 +54,13 @@ const validatePass = (rule, value, callback) => {
 }
 
 const rules = {
-  username: [
+  userID: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 5, max: 10, message: '长度在 5 到 10 个字符', trigger: 'blur' }
+    { min: 5, max: 20, message: '长度在 5 到 20 个字符', trigger: 'blur' }
   ],
-  nickname: [
+  username: [
     { required: true, message: '请输入用户昵称', trigger: 'blur' },
-    { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },

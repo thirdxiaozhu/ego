@@ -9,6 +9,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"time"
 )
 
 type EgoClientUserApi struct{}
@@ -273,13 +274,15 @@ func (ECUApi *EgoClientUserApi) Login(c *gin.Context) {
 	}
 
 	// 请添加自己的业务逻辑
-
 	var user *egoclient.EgoClientUser
 	if user, err = ECUService.Login(ctx, loginInfo.UserID, loginInfo.Password); user == nil || err != nil {
 		response.FailWithMessage("登录失败", c)
 		return
 	}
 	token, claims, err := utils.LoginToken(user)
+
+	maxAge := int(claims.RegisteredClaims.ExpiresAt.Unix() - time.Now().Unix())
+	utils.SetToken(c, token, maxAge)
 	if err != nil {
 		response.FailWithMessage("登录失败", c)
 		return

@@ -8,8 +8,8 @@
           :model="form"
           :rules="rules"
       >
-        <el-form-item prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
+        <el-form-item prop="userID">
+          <el-input v-model="form.userID" placeholder="请输入用户名"></el-input>
         </el-form-item>
         <el-form-item prop="password">
           <el-input type="password" v-model="form.password" placeholder="请输入密码"></el-input>
@@ -35,14 +35,14 @@ import cookie from 'js-cookie'
 const router = useRouter()
 
 const form = ref({
-  username: '',
+  userID: '',
   password: ''
 })
 
 const rules = {
-  username: [
+  userID: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 5, max: 10, message: '长度在 5 到 10 个字符', trigger: 'blur' }
+    { min: 5, max: 20, message: '长度在 5 到 20 个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -56,6 +56,8 @@ const getUserInfoFunc = async () => {
   const res = await getUserInfo()
   if(res.code === 0){
     router.push("/")
+  }else{
+    console.log("<UNK>")
   }
 }
 
@@ -65,6 +67,7 @@ const loginFunc = async () =>{
     const res = await login(form.value)
     if(res.code === 0){
       getUserInfoFunc()
+      console.log("OK")
     }
   })
 }
