@@ -16,16 +16,16 @@ func (s *EgoClientUserRouter) InitEgoClientUserRouter(Router *gin.RouterGroup, P
 		ECURouter.DELETE("deleteEgoClientUser", ECUApi.DeleteEgoClientUser)
 		ECURouter.DELETE("deleteEgoClientUserByIds", ECUApi.DeleteEgoClientUserByIds)
 		ECURouter.PUT("updateEgoClientUser", ECUApi.UpdateEgoClientUser)
+		ECURouter.PUT("adminChangePassword", ECUApi.AdminChangePassword)
 	}
 	{
 		ECURouterWithoutRecord.GET("findEgoClientUser", ECUApi.FindEgoClientUser)
 		ECURouterWithoutRecord.GET("getEgoClientUserList", ECUApi.GetEgoClientUserList)
+		ECURouterWithoutRecord.GET("getEgoClientUserPublic", ECUApi.GetEgoClientUserPublic)
+		ECURouterWithoutRecord.GET("getUserInfo", ECUApi.GetUserInfo)
 	}
 	{
-		ECURouterWithoutAuth.GET("getEgoClientUserPublic", ECUApi.GetEgoClientUserPublic)
-		ECURouterWithoutAuth.PUT("adminChangePassword", ECUApi.AdminChangePassword)
 		ECURouterWithoutAuth.POST("register", ECUApi.Register)
 		ECURouterWithoutAuth.POST("login", ECUApi.Login)
-		ECURouterWithoutAuth.GET("getUserInfo", ECUApi.GetUserInfo)
 	}
 }

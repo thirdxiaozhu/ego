@@ -6,6 +6,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -228,15 +229,30 @@ func (ECUApi *EgoClientUserApi) AdminChangePassword(c *gin.Context) {
 func (ECUApi *EgoClientUserApi) Register(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
-	// 请添加自己的业务逻辑
-	err := ECUService.Register(ctx)
+
+	var regInfo egoclientReq.UserAction
+	err := c.ShouldBindJSON(&regInfo)
+
+	body, _ := c.GetRawData()
+	global.GVA_LOG.Info("ECU", zap.Any("Body", string(body)))
+	global.GVA_LOG.Info("ECU", zap.Any("ecu", regInfo))
 	if err != nil {
-		global.GVA_LOG.Error("失败!", zap.Error(err))
-		response.FailWithMessage("失败", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithData("返回数据", c)
-   	response.OkWithData("返回数据",c)
+
+	var ecu egoclient.EgoClientUser
+	ecu.Username = regInfo.Username
+	ecu.Password = regInfo.Password
+	ecu.UserID = regInfo.UserID
+
+	err = ECUService.CreateEgoClientUser(ctx, &ecu)
+	if err != nil {
+		global.GVA_LOG.Error("注册失败!", zap.Error(err))
+		response.FailWithMessage("注册失败", c)
+		return
+	}
+	response.OkWithData("注册成功", c)
 }
 
 // Login 用户登录
@@ -249,15 +265,30 @@ func (ECUApi *EgoClientUserApi) Register(c *gin.Context) {
 func (ECUApi *EgoClientUserApi) Login(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
-	// 请添加自己的业务逻辑
-	err := ECUService.Login(ctx)
+	var loginInfo egoclientReq.UserAction
+	err := c.ShouldBindJSON(&loginInfo)
 	if err != nil {
-		global.GVA_LOG.Error("失败!", zap.Error(err))
-		response.FailWithMessage("失败", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.OkWithData("返回数据", c)
-   	response.OkWithData("返回数据",c)
+
+	// 请添加自己的业务逻辑
+
+	var user *egoclient.EgoClientUser
+	if user, err = ECUService.Login(ctx, loginInfo.UserID, loginInfo.Password); user == nil || err != nil {
+		response.FailWithMessage("登录失败", c)
+		return
+	}
+	token, claims, err := utils.LoginToken(user)
+	if err != nil {
+		response.FailWithMessage("登录失败", c)
+		return
+	}
+	response.OkWithData(gin.H{
+		"token":  token,
+		"claims": claims,
+		"user":   user,
+	}, c)
 }
 
 // GetUserInfo 获取用户信息
@@ -270,13 +301,16 @@ func (ECUApi *EgoClientUserApi) Login(c *gin.Context) {
 func (ECUApi *EgoClientUserApi) GetUserInfo(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
-	// 请添加自己的业务逻辑
-	err := ECUService.GetUserInfo(ctx)
-	if err != nil {
-		global.GVA_LOG.Error("失败!", zap.Error(err))
+	id := utils.GetUserID(c)
+	if id == 0 {
 		response.FailWithMessage("失败", c)
 		return
 	}
-	response.OkWithData("返回数据", c)
-   	response.OkWithData("返回数据",c)
+	// 请添加自己的业务逻辑
+	user, err := ECUService.GetUserInfo(ctx, id)
+	if err != nil {
+		response.FailWithMessage("失败", c)
+		return
+	}
+	response.OkWithData(user, c)
 }

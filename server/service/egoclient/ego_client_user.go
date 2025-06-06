@@ -117,26 +117,27 @@ func (ECUService *EgoClientUserService) AdminChangePassword(ctx context.Context,
 	return db.Error
 }
 
-// Register 用户注册
-// Author [yourname](https://github.com/yourname)
-func (ECUService *EgoClientUserService) Register(ctx context.Context) (err error) {
-	// 请在这里实现自己的业务逻辑
-	db := global.GVA_DB.Model(&egoclient.EgoClientUser{})
-	return db.Error
-}
-
 // Login 用户登录
 // Author [yourname](https://github.com/yourname)
-func (ECUService *EgoClientUserService) Login(ctx context.Context) (err error) {
+func (ECUService *EgoClientUserService) Login(ctx context.Context, UserID, password *string) (*egoclient.EgoClientUser, error) {
 	// 请在这里实现自己的业务逻辑
-	db := global.GVA_DB.Model(&egoclient.EgoClientUser{})
-	return db.Error
+	var err error
+	var user egoclient.EgoClientUser
+	err = global.GVA_DB.First(&user, "user_id = ?", UserID).Error
+	if err != nil {
+		return nil, errors.New("用户不存在")
+	}
+	if utils.BcryptCheck(*password, *user.Password) == true {
+		return &user, nil
+	} else {
+		return nil, errors.New("密码错误")
+	}
 }
 
 // GetUserInfo 获取用户信息
 // Author [yourname](https://github.com/yourname)
-func (ECUService *EgoClientUserService) GetUserInfo(ctx context.Context) (err error) {
-	// 请在这里实现自己的业务逻辑
-	db := global.GVA_DB.Model(&egoclient.EgoClientUser{})
-	return db.Error
+func (ECUService *EgoClientUserService) GetUserInfo(ctx context.Context, id uint) (user egoclient.EgoClientUser, err error) {
+	//主键是id
+	err = global.GVA_DB.First(&user, id).Error
+	return
 }
