@@ -1,3 +1,7 @@
 package egoclient
 
-type ServiceGroup struct{ EgoClientUserService }
+type ServiceGroup struct {
+	EgoClientUserService
+	EgoDialogueService
+	EgoModelService
+}
