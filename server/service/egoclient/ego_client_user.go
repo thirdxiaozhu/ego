@@ -141,3 +141,11 @@ func (ECUService *EgoClientUserService) GetUserInfo(ctx context.Context, id uint
 	err = global.GVA_DB.First(&user, id).Error
 	return
 }
+
+// Logout 登出
+// Author [yourname](https://github.com/yourname)
+func (ECUService *EgoClientUserService) Logout(ctx context.Context) (err error) {
+	// 请在这里实现自己的业务逻辑
+	db := global.GVA_DB.Model(&egoclient.EgoClientUser{})
+	return db.Error
+}

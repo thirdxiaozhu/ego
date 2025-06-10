@@ -162,3 +162,16 @@ export const getUserInfo = () => {
     method: 'GET'
   })
 }
+// Logout 登出
+// @Tags EgoClientUser
+// @Summary 登出
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=object,msg=string} "成功"
+// @Router /ECU/logout [POST]
+export const logout = () => {
+  return service({
+    url: '/ECU/logout',
+    method: 'POST'
+  })
+}

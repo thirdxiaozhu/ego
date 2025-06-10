@@ -27,5 +27,6 @@ func (s *EgoClientUserRouter) InitEgoClientUserRouter(Router *gin.RouterGroup, P
 	{
 		ECURouterWithoutAuth.POST("register", ECUApi.Register)
 		ECURouterWithoutAuth.POST("login", ECUApi.Login)
+		ECURouterWithoutAuth.POST("logout", ECUApi.Logout)
 	}
 }

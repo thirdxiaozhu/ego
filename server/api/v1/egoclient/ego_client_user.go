@@ -317,3 +317,17 @@ func (ECUApi *EgoClientUserApi) GetUserInfo(c *gin.Context) {
 	}
 	response.OkWithData(user, c)
 }
+
+// Logout 登出
+// @Tags EgoClientUser
+// @Summary 登出
+// @Accept application/json
+// @Produce application/json
+// @Param data query egoclientReq.EgoClientUserSearch true "成功"
+// @Success 200 {object} response.Response{data=object,msg=string} "成功"
+// @Router /ECU/logout [POST]
+func (ECUApi *EgoClientUserApi) Logout(c *gin.Context) {
+	utils.ClearToken(c)
+
+	response.Ok(c)
+}
