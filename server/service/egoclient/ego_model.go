@@ -86,34 +86,10 @@ func (eModelService *EgoModelService) GetEgoModelPublic(ctx context.Context) {
 // GetEgoModelInfoAll 分页获取模型记录
 // Author [yourname](https://github.com/yourname)
 func (eModelService *EgoModelService) GetEgoModelInfoAll(ctx context.Context) (list []egoclient.EgoModel, err error) {
-	limit := info.PageSize
-	offset := info.PageSize * (info.Page - 1)
 	// 创建db
 	db := global.GVA_DB.Model(&egoclient.EgoModel{})
-	var eModels []egoclient.EgoModel
 	// 如果有条件搜索 下方会自动创建搜索语句
-	if len(info.CreatedAtRange) == 2 {
-		db = db.Where("created_at BETWEEN ? AND ?", info.CreatedAtRange[0], info.CreatedAtRange[1])
-	}
 
-	if info.ModelProvider != nil && *info.ModelProvider != "" {
-		db = db.Where("model_provider = ?", *info.ModelProvider)
-	}
-	if info.ModelType != nil && *info.ModelType != "" {
-		db = db.Where("model_type = ?", *info.ModelType)
-	}
-	if info.ModelName != nil && *info.ModelName != "" {
-		db = db.Where("model_name = ?", *info.ModelName)
-	}
-	err = db.Count(&total).Error
-	if err != nil {
-		return
-	}
-
-	if limit != 0 {
-		db = db.Limit(limit).Offset(offset)
-	}
-
-	err = db.Find(&eModels).Error
-	return eModels, total, err
+	err = db.Find(&list).Error
+	return
 }

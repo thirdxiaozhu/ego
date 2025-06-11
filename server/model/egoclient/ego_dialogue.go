@@ -9,10 +9,11 @@ import (
 // Ego对话 结构体  EgoDialogue
 type EgoDialogue struct {
 	global.GVA_MODEL
-	UUID    uuid.UUID `json:"uuid" form:"uuid" gorm:"column:uuid;"`       //对话UUID
-	User    *int      `json:"user" form:"user" gorm:"column:user;"`       //所属用户
-	ModelID int       `json:"model-id" form:"model" gorm:"column:model;"` //模型
-	Model   EgoModel  `json:"model" gorm:"foreignKey:ID;references:ModelID;"`
+	UUID    uuid.UUID     `json:"uuid" form:"uuid" gorm:"column:uuid;"`   //对话UUID
+	UserID  uint          `json:"userID" form:"user" gorm:"column:user;"` //所属用户
+	User    EgoClientUser `json:"user" gorm:"foreignKey:ID;references:UserID;"`
+	ModelID int           `json:"modelID" form:"model" gorm:"column:model;"` //模型
+	Model   EgoModel      `json:"model" gorm:"foreignKey:ID;references:ModelID;"`
 }
 
 // TableName Ego对话 EgoDialogue自定义表名 ego_dialogue

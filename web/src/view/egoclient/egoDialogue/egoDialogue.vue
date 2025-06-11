@@ -66,19 +66,19 @@
 
         <el-table-column align="left" label="对话UUID" prop="uuid" width="120" />
 
-        <el-table-column align="left" label="所属用户" prop="user" width="120" />
+        <el-table-column align="left" label="所属用户" prop="user.userID" width="120" />
 
-        <el-table-column align="left" label="服务提供商" prop="modelProvider" width="120">
+        <el-table-column align="left" label="服务提供商" prop="model.modelProvider" width="120">
           <template #default="scope">
-            {{ filterDict(scope.row.modelProvider,modelProviderOptions) }}
+            {{ filterDict(scope.row.model.modelProvider,modelProviderOptions) }}
           </template>
         </el-table-column>
-        <el-table-column align="left" label="服务类型" prop="modelType" width="120">
+        <el-table-column align="left" label="服务类型" prop="model.modelType" width="120">
           <template #default="scope">
-            {{ filterDict(scope.row.modelType,modelTypeOptions) }}
+            {{ filterDict(scope.row.model.modelType,modelTypeOptions) }}
           </template>
         </el-table-column>
-        <el-table-column align="left" label="模型" prop="model" width="120" />
+        <el-table-column align="left" label="模型" prop="model.modelName" width="120" />
 
         <el-table-column align="left" label="操作" fixed="right" :min-width="appStore.operateMinWith">
           <template #default="scope">
@@ -129,16 +129,16 @@
           {{ detailFrom.uuid }}
         </el-descriptions-item>
         <el-descriptions-item label="所属用户">
-          {{ detailFrom.user }}
+          {{ detailFrom.user.userID }}
         </el-descriptions-item>
         <el-descriptions-item label="服务提供商">
-          {{ detailFrom.modelProvider }}
+          {{ detailFrom.model.modelProvider }}
         </el-descriptions-item>
         <el-descriptions-item label="服务类型">
-          {{ detailFrom.modelType }}
+          {{ detailFrom.model.modelType }}
         </el-descriptions-item>
         <el-descriptions-item label="模型">
-          {{ detailFrom.model }}
+          {{ detailFrom.model.modelName }}
         </el-descriptions-item>
       </el-descriptions>
     </el-drawer>

@@ -5,13 +5,16 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/google/uuid"
 )
 
 type EgoDialogueService struct{}
 
 // CreateEgoDialogue 创建Ego对话记录
 // Author [yourname](https://github.com/yourname)
-func (EDService *EgoDialogueService) CreateEgoDialogue(ctx context.Context, ED *egoclient.EgoDialogue) (err error) {
+func (EDService *EgoDialogueService) CreateEgoDialogue(ctx context.Context, userid uint, ED *egoclient.EgoDialogue) (err error) {
+	ED.UserID = userid
+	ED.UUID, _ = uuid.NewV6()
 	err = global.GVA_DB.Create(ED).Error
 	return err
 }
@@ -40,7 +43,7 @@ func (EDService *EgoDialogueService) UpdateEgoDialogue(ctx context.Context, ED e
 // GetEgoDialogue 根据ID获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogue(ctx context.Context, ID string) (ED egoclient.EgoDialogue, err error) {
-	err = global.GVA_DB.Where("id = ?", ID).First(&ED).Error
+	err = global.GVA_DB.Where("id = ?", ID).Preload("Model").Preload("User").First(&ED).Error
 	return
 }
 
@@ -69,7 +72,7 @@ func (EDService *EgoDialogueService) GetEgoDialogueInfoList(ctx context.Context,
 	}
 
 	if limit != 0 {
-		db = db.Limit(limit).Offset(offset)
+		db = db.Limit(limit).Offset(offset).Preload("Model").Preload("User")
 	}
 
 	err = db.Find(&EDs).Error

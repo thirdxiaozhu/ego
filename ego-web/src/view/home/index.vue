@@ -1,17 +1,34 @@
 
 <template>
     <div class="app-container">
-      <!-- 顶部导航栏 -->
-      <HeaderBar />
+      <el-container>
+        <el-header>
+          <HeaderBar />
+</el-header>
+        <el-container>
+          <el-aside width="200px"> <Sidebar/></el-aside>
+          <el-main>
 
-      <div class="main-content">
-        <!-- 侧边栏 -->
-        <Sidebar />
-        <el-row>
+            <el-row>
+              <el-col :span="8">
 
-        </el-row>
-
-      </div>
+                <el-select
+                  v-model="selectedValue"
+                  clearable
+                  placeholder="请选择"
+                >
+                  <el-option
+                    v-for="item in modelList"
+                    :key="item.modelName"
+                    :label="item.modelName"
+                    :value="item.modelName"
+                  />
+                </el-select>
+              </el-col>
+            </el-row>
+          </el-main>
+        </el-container>
+      </el-container>
     </div>
 </template>
 
@@ -69,6 +86,7 @@ const logoutFunc = async () => {
 }
 
 const modelList = ref([])
+const selectedValue = ref('')
 
 onMounted(async () => {
   if (!cookie.get('x-token')) {
@@ -78,6 +96,10 @@ onMounted(async () => {
   }
 
   const ret = await getEgoModelAll()
+  if(ret.code === 0) {
+    modelList.value = ret.data
+    console.log(ret.data)
+  }
 })
 </script>
 

@@ -160,7 +160,12 @@ func (eModelApi *EgoModelApi) GetEgoModelList(c *gin.Context) {
 		response.FailWithMessage("获取失败:"+err.Error(), c)
 		return
 	}
-	response.OkWithData(list, c)
+	response.OkWithDetailed(response.PageResult{
+		List:     list,
+		Total:    total,
+		Page:     pageInfo.Page,
+		PageSize: pageInfo.PageSize,
+	}, "获取成功", c)
 }
 
 // GetEgoModelAll 分页获取模型列表
@@ -176,18 +181,13 @@ func (eModelApi *EgoModelApi) GetEgoModelAll(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
 
-	list, total, err := eModelService.GetEgoModelInfoList(ctx, pageInfo)
+	list, err := eModelService.GetEgoModelInfoAll(ctx)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败:"+err.Error(), c)
 		return
 	}
-	response.OkWithDetailed(response.PageResult{
-		List:     list,
-		Total:    total,
-		Page:     pageInfo.Page,
-		PageSize: pageInfo.PageSize,
-	}, "获取成功", c)
+	response.OkWithData(list, c)
 }
 
 // GetEgoModelPublic 不需要鉴权的模型接口
