@@ -1,8 +1,8 @@
 module github.com/flipped-aurora/gin-vue-admin/server
 
-go 1.23
+go 1.24.0
 
-toolchain go1.23.9
+toolchain go1.24.3
 
 require (
 	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible
@@ -179,3 +179,7 @@ require (
 	modernc.org/memory v1.8.2 // indirect
 	modernc.org/sqlite v1.34.5 // indirect
 )
+
+require github.com/liusuxian/go-aisdk v0.0.0
+
+replace github.com/liusuxian/go-aisdk => ./utils/go-aisdk
