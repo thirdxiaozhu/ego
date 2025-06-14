@@ -2,6 +2,7 @@ package global
 
 import (
 	"fmt"
+	"github.com/liusuxian/go-aisdk"
 	"github.com/mark3labs/mcp-go/server"
 	"sync"
 
@@ -39,6 +40,7 @@ var (
 	GVA_MCP_SERVER          *server.MCPServer
 	BlackCache              local_cache.Cache
 	lock                    sync.RWMutex
+	AiSDK                   *aisdk.SDKClient
 )
 
 // GetGlobalDBByDBName 通过名称获取db list中的db

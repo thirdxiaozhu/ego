@@ -2,6 +2,8 @@ package egoclient
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
@@ -47,6 +49,13 @@ func (EDService *EgoDialogueService) GetEgoDialogue(ctx context.Context, ID stri
 	return
 }
 
+// GetEgoDialogueByUuid 根据ID获取Ego对话记录
+// Author [yourname](https://github.com/yourname)
+func (EDService *EgoDialogueService) GetEgoDialogueByUuid(ctx context.Context, Uuid string) (ED egoclient.EgoDialogue, err error) {
+	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").First(&ED).Error
+	return
+}
+
 // GetEgoDialogueInfoList 分页获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogueInfoList(ctx context.Context, info egoclientReq.EgoDialogueSearch) (list []egoclient.EgoDialogue, total int64, err error) {
@@ -81,4 +90,15 @@ func (EDService *EgoDialogueService) GetEgoDialogueInfoList(ctx context.Context,
 func (EDService *EgoDialogueService) GetEgoDialoguePublic(ctx context.Context) {
 	// 此方法为获取数据源定义的数据
 	// 请自行实现
+}
+
+// PostEgoDialogueUserMsg 创建Ego对话记录
+// Author [yourname](https://github.com/yourname)
+func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context, Req *egoclientReq.EgoDialoguePostUserMsg) error {
+	ED, err := EDService.GetEgoDialogueByUuid(ctx, Req.DialogueID)
+	if err != nil {
+		return errors.New("无法找到对话")
+	}
+	fmt.Println(Req.DialogueID, Req.Text, Req.Reasoning, ED)
+	return nil
 }

@@ -188,3 +188,32 @@ func (EDApi *EgoDialogueApi) GetEgoDialoguePublic(c *gin.Context) {
 		"info": "不需要鉴权的Ego对话接口信息",
 	}, "获取成功", c)
 }
+
+// PostEgoDialogueUserMsg 创建Ego对话的用户消息
+// @Tags EgoDialogue
+// @Summary 创建Ego对话
+// @Security ApiKeyAuth
+// @Accept application/json
+// @Produce application/json
+// @Param data body egoclient.EgoDialogue true "创建Ego对话"
+// @Success 200 {object} response.Response{msg=string} "创建成功"
+// @Router /ED/createEgoDialogue [post]
+func (EDApi *EgoDialogueApi) PostEgoDialogueUserMsg(c *gin.Context) {
+	// 创建业务用Context
+	ctx := c.Request.Context()
+
+	var ED egoclientReq.EgoDialoguePostUserMsg
+	err := c.ShouldBindJSON(&ED)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	err = EDService.PostEgoDialogueUserMsg(ctx, &ED)
+	if err != nil {
+		global.GVA_LOG.Error("创建失败!", zap.Error(err))
+		response.FailWithMessage("创建失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("创建成功", c)
+}

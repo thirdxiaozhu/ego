@@ -13,7 +13,8 @@ func (s *EgoDialogueRouter) InitEgoDialogueRouter(Router *gin.RouterGroup, Publi
 	EDRouterWithoutRecord := Router.Group("ED")
 	EDRouterWithoutAuth := PublicRouter.Group("ED")
 	{
-		EDRouter.POST("createEgoDialogue", EDApi.CreateEgoDialogue)             // 新建Ego对话
+		EDRouter.POST("createEgoDialogue", EDApi.CreateEgoDialogue) // 新建Ego对话
+		EDRouter.POST("postEgoDialogueUserMsg", EDApi.PostEgoDialogueUserMsg)
 		EDRouter.DELETE("deleteEgoDialogue", EDApi.DeleteEgoDialogue)           // 删除Ego对话
 		EDRouter.DELETE("deleteEgoDialogueByIds", EDApi.DeleteEgoDialogueByIds) // 批量删除Ego对话
 		EDRouter.PUT("updateEgoDialogue", EDApi.UpdateEgoDialogue)              // 更新Ego对话

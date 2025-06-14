@@ -5,6 +5,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
+	"github.com/liusuxian/go-aisdk"
 	"go.uber.org/zap"
 	"time"
 )
@@ -27,6 +28,13 @@ func RunServer() {
 	// 从db加载jwt数据
 	if global.GVA_DB != nil {
 		system.LoadAll()
+	}
+
+	var err error
+	global.AiSDK, err = aisdk.NewSDKClient("aisdk-config.json", aisdk.WithDefaultMiddlewares())
+	if err != nil {
+		zap.L().Error(fmt.Sprintf("Can not initialize AI SDK %+v", err))
+		return
 	}
 
 	Router := initialize.Routers()
