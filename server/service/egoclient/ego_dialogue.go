@@ -3,10 +3,10 @@ package egoclient
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/service/egoclient/egoModels"
 	"github.com/google/uuid"
 )
 
@@ -99,6 +99,11 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	if err != nil {
 		return errors.New("无法找到对话")
 	}
-	fmt.Println(Req.DialogueID, Req.Text, Req.Reasoning, ED)
+
+	err = egoModels.AssembleRequest(&ED, Req)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

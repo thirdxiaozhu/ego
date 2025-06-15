@@ -15,5 +15,5 @@ type EgoModel struct {
 
 // TableName 模型 EgoModel自定义表名 ego-model
 func (EgoModel) TableName() string {
-	return "ego-model"
+	return "ego_model"
 }
