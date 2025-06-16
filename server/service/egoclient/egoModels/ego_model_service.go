@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/liusuxian/go-aisdk/consts"
 )
 
 type Service interface {
@@ -13,14 +14,14 @@ type Service interface {
 type AssembleFunc func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg)
 
 type BasicService struct {
-	ModelAssemble map[string]map[string]AssembleFunc
+	ModelAssemble map[consts.ModelType]map[string]AssembleFunc
 }
 
 func (s *BasicService) AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (err error) {
 	var modelType map[string]AssembleFunc
 	var exists bool
 	var fn AssembleFunc
-	if modelType, exists = s.ModelAssemble[*ED.Model.ModelType]; !exists {
+	if modelType, exists = s.ModelAssemble[ED.Model.ModelType]; !exists {
 		return errors.New("model type not exists")
 	}
 	if fn, exists = modelType[*ED.Model.ModelName]; !exists || fn == nil {
@@ -30,13 +31,13 @@ func (s *BasicService) AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclient
 	return
 }
 
-var serviceRegistry = make(map[string]func() Service)
+var serviceRegistry = make(map[consts.Provider]func() Service)
 
-func RegisterService(name string, factory func() Service) {
+func RegisterService(name consts.Provider, factory func() Service) {
 	serviceRegistry[name] = factory
 }
 
-func GetService(name string) (Service, bool) {
+func GetService(name consts.Provider) (Service, bool) {
 	if factory, exists := serviceRegistry[name]; exists {
 		return factory(), true
 	}
@@ -44,7 +45,7 @@ func GetService(name string) (Service, bool) {
 }
 
 func AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (err error) {
-	service, ok := GetService(*ED.Model.ModelProvider)
+	service, ok := GetService(ED.Model.ModelProvider)
 	if !ok {
 		err = errors.New("service not found")
 	}
