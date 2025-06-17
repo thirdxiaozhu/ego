@@ -3,11 +3,13 @@ package egoclient
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/egoclient/egoModels"
 	"github.com/google/uuid"
+	"github.com/liusuxian/go-aisdk/consts"
 )
 
 type EgoDialogueService struct{}
@@ -38,6 +40,7 @@ func (EDService *EgoDialogueService) DeleteEgoDialogueByIds(ctx context.Context,
 // UpdateEgoDialogue 更新Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) UpdateEgoDialogue(ctx context.Context, ED egoclient.EgoDialogue) (err error) {
+	fmt.Println(ED)
 	err = global.GVA_DB.Model(&egoclient.EgoDialogue{}).Where("id = ?", ED.ID).Updates(&ED).Error
 	return err
 }
@@ -100,10 +103,21 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 		return errors.New("无法找到对话")
 	}
 
-	err = egoModels.AssembleRequest(&ED, Req)
-	if err != nil {
+	var histories []*egoclient.EgoDialogueHistory
+	histories = append(histories, &egoclient.EgoDialogueHistory{
+		ConversationID:   ED.ID,
+		Role:             consts.UserRole,
+		ReasoningContent: "",
+		Content:          Req.Text,
+	})
+
+	var assistantHistories []*egoclient.EgoDialogueHistory
+	if assistantHistories, err = egoModels.AssembleRequest(&ED, Req); err != nil {
 		return err
 	}
 
+	histories = append(histories, assistantHistories...)
+
+	global.GVA_DB.CreateInBatches(histories, 100)
 	return nil
 }

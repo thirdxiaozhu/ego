@@ -8,27 +8,26 @@ import (
 )
 
 type Service interface {
-	AssembleRequest(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (err error)
+	AssembleRequest(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (histories []*egoclient.EgoDialogueHistory, err error)
 }
 
-type AssembleFunc func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg)
+type AssembleFunc func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) ([]*egoclient.EgoDialogueHistory, error)
 
 type BasicService struct {
 	ModelAssemble map[consts.ModelType]map[string]AssembleFunc
 }
 
-func (s *BasicService) AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (err error) {
+func (s *BasicService) AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (histories []*egoclient.EgoDialogueHistory, err error) {
 	var modelType map[string]AssembleFunc
 	var exists bool
 	var fn AssembleFunc
 	if modelType, exists = s.ModelAssemble[ED.Model.ModelType]; !exists {
-		return errors.New("model type not exists")
+		return histories, errors.New("model type not exists")
 	}
 	if fn, exists = modelType[*ED.Model.ModelName]; !exists || fn == nil {
-		return errors.New("assemble Function not exists")
+		return histories, errors.New("assemble Function not exists")
 	}
-	fn(ED, Req)
-	return
+	return fn(ED, Req)
 }
 
 var serviceRegistry = make(map[consts.Provider]func() Service)
@@ -44,14 +43,10 @@ func GetService(name consts.Provider) (Service, bool) {
 	return nil, false
 }
 
-func AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (err error) {
+func AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (histories []*egoclient.EgoDialogueHistory, err error) {
 	service, ok := GetService(ED.Model.ModelProvider)
 	if !ok {
 		err = errors.New("service not found")
 	}
-	err = service.AssembleRequest(ED, Req)
-	if err != nil {
-		return err
-	}
-	return
+	return service.AssembleRequest(ED, Req)
 }

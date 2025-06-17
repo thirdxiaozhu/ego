@@ -180,6 +180,9 @@ require (
 	modernc.org/sqlite v1.34.5 // indirect
 )
 
-require github.com/liusuxian/go-aisdk v0.0.0
+require (
+	github.com/gorilla/websocket v1.5.3
+	github.com/liusuxian/go-aisdk v0.0.0
+)
 
 replace github.com/liusuxian/go-aisdk => ./utils/go-aisdk

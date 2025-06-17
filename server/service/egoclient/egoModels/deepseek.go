@@ -36,7 +36,7 @@ func (s *DeepseekService) initAssemblers() {
 	}
 }
 
-func (s *DeepseekService) DeepSeekAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) {
+func (s *DeepseekService) DeepSeekAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (histories []*egoclient.EgoDialogueHistory, err error) {
 	fmt.Println("DeepSeekChatAssemble", *ED.User.UserID, Req.DialogueID, Req.Text)
 
 	model := consts.DeepSeekChat
@@ -45,7 +45,8 @@ func (s *DeepseekService) DeepSeekAssemble(ED *egoclient.EgoDialogue, Req *egocl
 	}
 
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
-	_, err := global.AiSDK.CreateChatCompletionStream(ctx, models.ChatRequest{
+
+	chatReq := models.ChatRequest{
 		ModelInfo: models.ModelInfo{
 			Provider:  consts.DeepSeek,
 			ModelType: consts.ChatModel,
@@ -61,10 +62,27 @@ func (s *DeepseekService) DeepSeekAssemble(ED *egoclient.EgoDialogue, Req *egocl
 		},
 		Stream:              true,
 		MaxCompletionTokens: 4096,
-	}, streamCallback, httpclient.WithTimeout(time.Minute*2))
-	if err != nil {
-		return
 	}
+
+	resp, err := global.AiSDK.CreateChatCompletionStream(ctx, chatReq, streamCallback, httpclient.WithTimeout(time.Minute*2))
+	if err != nil {
+		return nil, err
+	}
+
+	steamResponse := resp.(*models.ChatStreamResponse)
+
+	for _, v := range steamResponse.Contents {
+		history := egoclient.EgoDialogueHistory{
+			ConversationID:   ED.ID,
+			Role:             consts.AssistantRole,
+			ReasoningContent: v.ReasoningBuffer.String(),
+			Content:          v.ContentBuffer.String(),
+		}
+
+		histories = append(histories, &history)
+	}
+
+	return
 }
 func streamCallback(ctx context.Context, response models.ChatResponse) error {
 	//if response.Choices[0].Delta.Content == "" {
