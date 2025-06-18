@@ -6,9 +6,11 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/liusuxian/go-aisdk"
 	"github.com/liusuxian/go-aisdk/consts"
 	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
+	"log"
 	"time"
 )
 
@@ -47,11 +49,8 @@ func (s *DeepseekService) DeepSeekAssemble(ED *egoclient.EgoDialogue, Req *egocl
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
 
 	chatReq := models.ChatRequest{
-		ModelInfo: models.ModelInfo{
-			Provider:  consts.DeepSeek,
-			ModelType: consts.ChatModel,
-			Model:     model,
-		},
+		Provider: consts.DeepSeek,
+		Model:    model,
 		UserInfo: models.UserInfo{
 			UserID: *ED.User.UserID,
 		},
@@ -64,24 +63,48 @@ func (s *DeepseekService) DeepSeekAssemble(ED *egoclient.EgoDialogue, Req *egocl
 		MaxCompletionTokens: 4096,
 	}
 
-	resp, err := global.AiSDK.CreateChatCompletionStream(ctx, chatReq, streamCallback, httpclient.WithTimeout(time.Minute*2))
+	resp, err := global.AiSDK.CreateChatCompletionStream(ctx, chatReq, httpclient.WithTimeout(time.Minute*2))
 	if err != nil {
 		return nil, err
 	}
+	var Contents []models.ChatStreamContentBlock
 
-	steamResponse := resp.(*models.ChatStreamResponse)
-
-	for _, v := range steamResponse.Contents {
-		history := egoclient.EgoDialogueHistory{
-			ConversationID:   ED.ID,
-			Role:             consts.AssistantRole,
-			ReasoningContent: v.ReasoningBuffer.String(),
-			Content:          v.ContentBuffer.String(),
+	for {
+		var (
+			item       models.ChatBaseResponse
+			isFinished bool
+		)
+		if item, isFinished, err = resp.StreamReader.Recv(); err != nil {
+			log.Printf("createChatCompletionStream error = %v, request_id = %s", err, aisdk.RequestID(err))
+			break
 		}
-
-		histories = append(histories, &history)
+		if isFinished {
+			for _, v := range Contents {
+				history := egoclient.EgoDialogueHistory{
+					ConversationID:   ED.ID,
+					Role:             egoclient.AssistantRole,
+					ReasoningContent: v.ReasoningBuffer.String(),
+					Content:          v.ContentBuffer.String(),
+				}
+				histories = append(histories, &history)
+			}
+			break
+		}
+		log.Printf("createChatCompletionStream item = %+v", item)
+		for _, v := range item.Choices {
+			for v.Index >= len(Contents) {
+				Contents = append(Contents, models.ChatStreamContentBlock{})
+			}
+			Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
+			Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
+		}
+		if item.Usage != nil && item.StreamStats != nil {
+			log.Printf("createChatCompletionStream usage = %+v", item.Usage)
+			log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
+		}
 	}
 
+	log.Println(*histories[0])
 	return
 }
 func streamCallback(ctx context.Context, response models.ChatResponse) error {

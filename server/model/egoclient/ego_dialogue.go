@@ -4,7 +4,15 @@ package egoclient
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/google/uuid"
-	"github.com/liusuxian/go-aisdk/consts"
+)
+
+type RoleType string
+
+const (
+	SystemRole    RoleType = "system"
+	UserRole      RoleType = "user"
+	AssistantRole RoleType = "assistant"
+	ToolRole      RoleType = "tool"
 )
 
 // Ego对话 结构体  EgoDialogue
@@ -25,10 +33,10 @@ func (EgoDialogue) TableName() string {
 
 type EgoDialogueHistory struct {
 	global.GVA_MODEL
-	Role             consts.RoleType `json:"role" form:"role" gorm:"column:role;"`
-	ConversationID   uint            `json:"conversation_id" gorm:"conversation-id;comment:关联对话ID"`
-	ReasoningContent string          `json:"reasoning_content" form:"reasoning-content" gorm:"type:text;column:reasoning-content;"`
-	Content          string          `json:"content" form:"content" gorm:"type:text;column:content;"`
+	Role             RoleType `json:"role" form:"role" gorm:"column:role;"`
+	ConversationID   uint     `json:"conversation_id" gorm:"conversation-id;comment:关联对话ID"`
+	ReasoningContent string   `json:"reasoning_content" form:"reasoning-content" gorm:"type:text;column:reasoning-content;"`
+	Content          string   `json:"content" form:"content" gorm:"type:text;column:content;"`
 }
 
 func (EgoDialogueHistory) TableName() string {

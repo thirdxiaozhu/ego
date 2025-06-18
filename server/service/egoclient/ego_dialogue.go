@@ -9,7 +9,6 @@ import (
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/egoclient/egoModels"
 	"github.com/google/uuid"
-	"github.com/liusuxian/go-aisdk/consts"
 )
 
 type EgoDialogueService struct{}
@@ -106,7 +105,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	var histories []*egoclient.EgoDialogueHistory
 	histories = append(histories, &egoclient.EgoDialogueHistory{
 		ConversationID:   ED.ID,
-		Role:             consts.UserRole,
+		Role:             egoclient.UserRole,
 		ReasoningContent: "",
 		Content:          Req.Text,
 	})
