@@ -1,6 +1,7 @@
 package egoclient
 
 import (
+	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
@@ -28,6 +29,7 @@ func (EDApi *EgoDialogueApi) CreateEgoDialogue(c *gin.Context) {
 	var ED egoclient.EgoDialogue
 	err := c.ShouldBindJSON(&ED)
 	if err != nil {
+		fmt.Println(err.Error())
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
@@ -38,7 +40,7 @@ func (EDApi *EgoDialogueApi) CreateEgoDialogue(c *gin.Context) {
 		response.FailWithMessage("创建失败:"+err.Error(), c)
 		return
 	}
-	response.OkWithMessage("创建成功", c)
+	response.OkWithData(ED, c)
 }
 
 // DeleteEgoDialogue 删除Ego对话
