@@ -9,6 +9,10 @@ import (
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/egoclient/egoModels"
 	"github.com/google/uuid"
+	"github.com/liusuxian/go-aisdk"
+	"github.com/liusuxian/go-aisdk/httpclient"
+	"github.com/liusuxian/go-aisdk/models"
+	"log"
 )
 
 type EgoDialogueService struct{}
@@ -54,7 +58,7 @@ func (EDService *EgoDialogueService) GetEgoDialogue(ctx context.Context, ID stri
 // GetEgoDialogueByUuid 根据ID获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogueByUuid(ctx context.Context, Uuid string) (ED egoclient.EgoDialogue, err error) {
-	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").First(&ED).Error
+	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").Preload("Histories").First(&ED).Error
 	return
 }
 
@@ -102,21 +106,75 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 		return errors.New("无法找到对话")
 	}
 
-	var histories []*egoclient.EgoDialogueHistory
-	histories = append(histories, &egoclient.EgoDialogueHistory{
+	newHistory := egoclient.EgoDialogueHistory{
 		ConversationID:   ED.ID,
 		Role:             egoclient.UserRole,
 		ReasoningContent: "",
 		Content:          Req.Text,
-	})
+	}
 
-	var assistantHistories []*egoclient.EgoDialogueHistory
-	if assistantHistories, err = egoModels.AssembleRequest(&ED, Req); err != nil {
+	ED.Histories = append(ED.Histories, newHistory)
+
+	if err = EDService.CreateEgoDialogueHistory(ctx, &newHistory); err != nil {
 		return err
 	}
 
-	histories = append(histories, assistantHistories...)
+	var resp httpclient.Response
+	if resp, err = egoModels.AssembleRequest(&ED, Req); err != nil {
+		return err
+	}
 
-	global.GVA_DB.CreateInBatches(histories, 100)
+	streamResp := resp.(models.ChatResponseStream)
+
+	go func() {
+		var Contents []models.ChatStreamContentBlock
+		for {
+			var (
+				item       models.ChatBaseResponse
+				isFinished bool
+			)
+			if item, isFinished, err = streamResp.StreamReader.Recv(); err != nil {
+				log.Printf("createChatCompletionStream error = %v, request_id = %s", err, aisdk.RequestID(err))
+				break
+			}
+			if isFinished {
+				for _, v := range Contents {
+					history := egoclient.EgoDialogueHistory{
+						ConversationID:   ED.ID,
+						Role:             egoclient.AssistantRole,
+						ReasoningContent: v.ReasoningBuffer.String(),
+						Content:          v.ContentBuffer.String(),
+					}
+					err = EDService.CreateEgoDialogueHistory(ctx, &history)
+					if err != nil {
+						return
+					}
+				}
+				break
+			}
+			log.Printf("createChatCompletionStream item = %+v", item)
+
+			//TODO: 在这里做返回前端的SSE
+			for _, v := range item.Choices {
+				for v.Index >= len(Contents) {
+					Contents = append(Contents, models.ChatStreamContentBlock{})
+				}
+				Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
+				Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
+			}
+			if item.Usage != nil && item.StreamStats != nil {
+				log.Printf("createChatCompletionStream usage = %+v", item.Usage)
+				log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
+			}
+		}
+	}()
+
 	return nil
+}
+
+// CreateEgoDialogueHistory 创建Ego对话历史记录
+// Author [yourname](https://github.com/yourname)
+func (EDService *EgoDialogueService) CreateEgoDialogueHistory(ctx context.Context, EDH *egoclient.EgoDialogueHistory) (err error) {
+	err = global.GVA_DB.Create(EDH).Error
+	return err
 }

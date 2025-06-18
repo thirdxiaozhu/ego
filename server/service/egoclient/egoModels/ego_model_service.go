@@ -5,27 +5,28 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/liusuxian/go-aisdk/consts"
+	"github.com/liusuxian/go-aisdk/httpclient"
 )
 
 type Service interface {
-	AssembleRequest(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (histories []*egoclient.EgoDialogueHistory, err error)
+	AssembleRequest(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error)
 }
 
-type AssembleFunc func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) ([]*egoclient.EgoDialogueHistory, error)
+type AssembleFunc func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error)
 
 type BasicService struct {
 	ModelAssemble map[consts.ModelType]map[string]AssembleFunc
 }
 
-func (s *BasicService) AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (histories []*egoclient.EgoDialogueHistory, err error) {
+func (s *BasicService) AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
 	var modelType map[string]AssembleFunc
 	var exists bool
 	var fn AssembleFunc
 	if modelType, exists = s.ModelAssemble[ED.Model.ModelType]; !exists {
-		return histories, errors.New("model type not exists")
+		return nil, errors.New("model type not exists")
 	}
 	if fn, exists = modelType[*ED.Model.ModelName]; !exists || fn == nil {
-		return histories, errors.New("assemble Function not exists")
+		return nil, errors.New("assemble Function not exists")
 	}
 	return fn(ED, Req)
 }
@@ -43,10 +44,10 @@ func GetService(name consts.Provider) (Service, bool) {
 	return nil, false
 }
 
-func AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (histories []*egoclient.EgoDialogueHistory, err error) {
+func AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
 	service, ok := GetService(ED.Model.ModelProvider)
 	if !ok {
-		err = errors.New("service not found")
+		return nil, errors.New("service not found")
 	}
 	return service.AssembleRequest(ED, Req)
 }
