@@ -109,7 +109,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	//新的用户消息存入历史数据中
 	newHistory := egoclient.EgoDialogueHistory{
 		Role:             egoclient.UserRole,
-		ItemID:           "",
+		Item:             "",
 		IsChoice:         true,
 		ConversationID:   ED.ID,
 		ReasoningContent: "",
@@ -118,7 +118,6 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	if err = EDService.CreateEgoDialogueHistory(ctx, &newHistory); err != nil {
 		return err
 	}
-
 	ED.Histories = append(ED.Histories, newHistory)
 
 	//发送请求
@@ -146,7 +145,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 				for _, v := range Contents {
 					history := egoclient.EgoDialogueHistory{
 						Role:             egoclient.AssistantRole,
-						ItemID:           item.ID,
+						Item:             Item.UUID,
 						ConversationID:   ED.ID,
 						ReasoningContent: v.ReasoningBuffer.String(),
 						Content:          v.ContentBuffer.String(),

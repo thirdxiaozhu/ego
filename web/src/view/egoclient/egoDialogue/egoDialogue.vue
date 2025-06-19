@@ -140,6 +140,13 @@
         <el-descriptions-item label="模型">
           {{ detailFrom.model.modelName }}
         </el-descriptions-item>
+        <el-descriptions-item label="历史记录">
+          {{ detailFrom.histories }}
+        </el-descriptions-item>
+        <!-- token使用情况记录在Item中 -->
+        <el-descriptions-item label="token使用情况">
+          {{ detailFrom.items }}
+        </el-descriptions-item>
       </el-descriptions>
     </el-drawer>
 
@@ -393,6 +400,7 @@
     const res = await findEgoDialogue({ ID: row.ID })
     if (res.code === 0) {
       detailFrom.value = res.data
+      console.log(detailFrom.value)
       openDetailShow()
     }
   }

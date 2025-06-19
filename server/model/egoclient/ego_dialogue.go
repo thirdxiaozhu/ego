@@ -73,8 +73,8 @@ func (EgoDialogueItem) TableName() string {
 type EgoDialogueHistory struct {
 	global.GVA_MODEL
 	Role             RoleType `json:"role" form:"role" gorm:"column:role;"`
-	ItemID           string   `json:"itemID" form:"itemID" gorm:"column:item_id;"`
-	ConversationID   uint     `json:"conversation_id" gorm:"conversation-id;comment:关联对话ID"`
+	Item             string   `json:"item" form:"item" gorm:"column:item;"`                  //所属Item UUID
+	ConversationID   uint     `json:"conversation_id" gorm:"conversation-id;comment:关联对话ID"` //所属用户的ID（自增主键）
 	ReasoningContent string   `json:"reasoning_content" form:"reasoning-content" gorm:"type:text;column:reasoning-content;"`
 	Content          string   `json:"content" form:"content" gorm:"type:text;column:content;"`
 	IsChoice         bool     `json:"isChoice" form:"isChoice" gorm:"column:is_choice;"`
