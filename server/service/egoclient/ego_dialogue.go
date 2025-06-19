@@ -51,14 +51,14 @@ func (EDService *EgoDialogueService) UpdateEgoDialogue(ctx context.Context, ED e
 // GetEgoDialogue 根据ID获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogue(ctx context.Context, ID string) (ED egoclient.EgoDialogue, err error) {
-	err = global.GVA_DB.Where("id = ?", ID).Preload("Model").Preload("User").First(&ED).Error
+	err = global.GVA_DB.Where("id = ?", ID).Preload("Model").Preload("User").Preload("Histories").Preload("Items").First(&ED).Error
 	return
 }
 
 // GetEgoDialogueByUuid 根据ID获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogueByUuid(ctx context.Context, Uuid string) (ED egoclient.EgoDialogue, err error) {
-	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").Preload("Histories").First(&ED).Error
+	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").Preload("Histories").Preload("Items").First(&ED).Error
 	return
 }
 
@@ -106,28 +106,32 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 		return errors.New("无法找到对话")
 	}
 
+	//新的用户消息存入历史数据中
 	newHistory := egoclient.EgoDialogueHistory{
-		ConversationID:   ED.ID,
 		Role:             egoclient.UserRole,
+		ItemID:           "",
+		IsChoice:         true,
+		ConversationID:   ED.ID,
 		ReasoningContent: "",
 		Content:          Req.Text,
 	}
-
-	ED.Histories = append(ED.Histories, newHistory)
-
 	if err = EDService.CreateEgoDialogueHistory(ctx, &newHistory); err != nil {
 		return err
 	}
 
+	ED.Histories = append(ED.Histories, newHistory)
+
+	//发送请求
 	var resp httpclient.Response
 	if resp, err = egoModels.AssembleRequest(&ED, Req); err != nil {
 		return err
 	}
-
 	streamResp := resp.(models.ChatResponseStream)
 
 	go func() {
 		var Contents []models.ChatStreamContentBlock
+		var Item egoclient.EgoDialogueItem
+
 		for {
 			var (
 				item       models.ChatBaseResponse
@@ -138,15 +142,18 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 				break
 			}
 			if isFinished {
+				//把choices里的内容逐条插入history库里
 				for _, v := range Contents {
 					history := egoclient.EgoDialogueHistory{
-						ConversationID:   ED.ID,
 						Role:             egoclient.AssistantRole,
+						ItemID:           item.ID,
+						ConversationID:   ED.ID,
 						ReasoningContent: v.ReasoningBuffer.String(),
 						Content:          v.ContentBuffer.String(),
+						IsChoice:         true,
 					}
-					err = EDService.CreateEgoDialogueHistory(ctx, &history)
-					if err != nil {
+
+					if err = EDService.CreateEgoDialogueHistory(ctx, &history); err != nil {
 						return
 					}
 				}
@@ -159,10 +166,20 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 				for v.Index >= len(Contents) {
 					Contents = append(Contents, models.ChatStreamContentBlock{})
 				}
+				Contents[v.Index].ContentID = item.ID
+				Contents[v.Index].ContentID = item.ID
 				Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
 				Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
 			}
 			if item.Usage != nil && item.StreamStats != nil {
+				//存储token用量
+				Item.UUID = item.ID
+				Item.PromptTokens = item.Usage.PromptTokens
+				Item.ConversationID = ED.ID
+				Item.CompletionTokens = item.Usage.CompletionTokens
+				if err = EDService.CreateEgoDialogueItem(ctx, &Item); err != nil {
+					return
+				}
 				log.Printf("createChatCompletionStream usage = %+v", item.Usage)
 				log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
 			}
@@ -176,5 +193,12 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) CreateEgoDialogueHistory(ctx context.Context, EDH *egoclient.EgoDialogueHistory) (err error) {
 	err = global.GVA_DB.Create(EDH).Error
+	return err
+}
+
+// CreateEgoDialogueItem 创建Ego对话历史记录
+// Author [yourname](https://github.com/yourname)
+func (EDService *EgoDialogueService) CreateEgoDialogueItem(ctx context.Context, EDI *egoclient.EgoDialogueItem) (err error) {
+	err = global.GVA_DB.Create(EDI).Error
 	return err
 }

@@ -49,6 +49,7 @@ type EgoDialogue struct {
 	User      EgoClientUser        `json:"user" gorm:"foreignKey:ID;references:UserID;"`
 	ModelID   int                  `json:"modelID" form:"model" gorm:"column:model;"` //模型
 	Model     EgoModel             `json:"model" gorm:"foreignKey:ID;references:ModelID;"`
+	Items     []EgoDialogueItem    `json:"items" gorm:"foreignKey:ConversationID"`
 	Histories []EgoDialogueHistory `json:"histories" gorm:"foreignKey:ConversationID;"`
 }
 
@@ -57,12 +58,26 @@ func (EgoDialogue) TableName() string {
 	return "ego_dialogue"
 }
 
+type EgoDialogueItem struct {
+	global.GVA_MODEL
+	UUID             string `json:"uuid" form:"uuid" gorm:"column:uuid;"`
+	ConversationID   uint   `json:"conversation_id" gorm:"conversation-id;comment:关联对话ID"`
+	CompletionTokens int    `json:"completion_tokens" form:"completion_tokens" gorm:"column:completion_tokens;"`
+	PromptTokens     int    `json:"prompt_tokens" form:"prompt_tokens" gorm:"column:prompt_tokens;"`
+}
+
+func (EgoDialogueItem) TableName() string {
+	return "ego_dialogue_item"
+}
+
 type EgoDialogueHistory struct {
 	global.GVA_MODEL
 	Role             RoleType `json:"role" form:"role" gorm:"column:role;"`
+	ItemID           string   `json:"itemID" form:"itemID" gorm:"column:item_id;"`
 	ConversationID   uint     `json:"conversation_id" gorm:"conversation-id;comment:关联对话ID"`
 	ReasoningContent string   `json:"reasoning_content" form:"reasoning-content" gorm:"type:text;column:reasoning-content;"`
 	Content          string   `json:"content" form:"content" gorm:"type:text;column:content;"`
+	IsChoice         bool     `json:"isChoice" form:"isChoice" gorm:"column:is_choice;"`
 }
 
 func (EgoDialogueHistory) TableName() string {
