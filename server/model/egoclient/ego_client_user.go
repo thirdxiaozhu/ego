@@ -51,22 +51,18 @@ func (s *EgoClientUser) GetUserInfo() any {
 
 type VipStatus struct {
 	global.GVA_MODEL
-	UserID uint `json:"user_id" gorm:"column: user_id;uniqueIndex"` // 一对一关系
-
-	// VIP时效性字段
+	UserID      uint       `json:"userID" gorm:"column:user_id;uniqueIndex"` // 一对一关系
 	ActivatedAt time.Time  // VIP激活时间
 	ExpiresAt   *time.Time // VIP过期时间
-
-	// 关联关系
-	VipLevelID uint     `json:"vip_level_id" gorm:"column:vip_level_id;default:0"` // 外键指向vip_levels表
-	VipLevel   VipLevel `json:"vip_level" gorm:"foreignKey:VipLevelID"`            // 关联VIP等级
+	VipLevelID  uint       `json:"vipLevelID" gorm:"column:vip_level_id;default:1"` // 外键指向vip_levels表
+	VipLevel    VipLevel   `json:"vipLevel" gorm:"foreignKey:VipLevelID"`           // 关联VIP等级
 }
 
 func (VipStatus) TableName() string {
 	return "ego_vip_status"
 }
 
-// VIP等级配置表 (可扩展的核心表)
+// VipLevel VIP等级配置表 (可扩展的核心表)
 type VipLevel struct {
 	global.GVA_MODEL
 	Name        string `json:"name" gorm:"column:name;size:50;uniqueIndex"`   // 等级名称 (如: VIP1, VIP2)
@@ -74,7 +70,7 @@ type VipLevel struct {
 	Description string `json:"description" orm:"column:description;size:255"` // 等级描述
 
 	// 可扩展字段
-	IsDefault bool `json:"is_default" gorm:"column:is_default;default:false"` // 是否默认等级
+	IsDefault bool `json:"isDefault" gorm:"column:is_default;default:false"` // 是否默认等级
 }
 
 func (VipLevel) TableName() string {
