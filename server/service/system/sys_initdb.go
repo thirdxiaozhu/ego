@@ -126,6 +126,7 @@ func (initDBService *InitDBService) InitDB(conf request.InitDB) (err error) {
 	if err = initHandler.InitTables(ctx, initializers); err != nil {
 		return err
 	}
+
 	if err = initHandler.InitData(ctx, initializers); err != nil {
 		return err
 	}

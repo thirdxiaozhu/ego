@@ -186,6 +186,8 @@
     modelProvider: '',
     modelType: '',
     modelName: '',
+    normalTimes : 0,
+    vipTimes : 0,
   })
 
 
