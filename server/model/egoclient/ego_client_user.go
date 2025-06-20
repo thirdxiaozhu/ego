@@ -22,8 +22,7 @@ type EgoClientUser struct {
 	Description *string   `json:"description" form:"description" gorm:"column:description;type:text;"` //用户简介
 	AuthorityId uint      `json:"authorityId" gorm:"default:999;comment:用户角色ID"`                       // 用户角色ID
 
-	VipStatusID uint      `json:"vipStatusID" gorm:"vip_status_id"`
-	VipStatus   VipStatus `json:"vipStatus" form:"vipStatus" gorm:"foreignkey:VipStatusID;"`
+	VipStatus VipStatus `json:"vipStatus" form:"vipStatus" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignkey:UserID;"`
 }
 
 func (s *EgoClientUser) GetUsername() string {
@@ -52,15 +51,15 @@ func (s *EgoClientUser) GetUserInfo() any {
 
 type VipStatus struct {
 	global.GVA_MODEL
-	UserID uint `json:"user_id" gorm:"column: user_id"` // 一对一关系
+	UserID uint `json:"user_id" gorm:"column: user_id;uniqueIndex"` // 一对一关系
 
 	// VIP时效性字段
-	ActivatedAt time.Time // VIP激活时间
-	ExpiresAt   time.Time // VIP过期时间
+	ActivatedAt time.Time  // VIP激活时间
+	ExpiresAt   *time.Time // VIP过期时间
 
 	// 关联关系
-	VipLevelID uint     `json:"vip_level_id" gorm:"column:"`            // 外键指向vip_levels表
-	VipLevel   VipLevel `json:"vip_level" gorm:"foreignKey:VipLevelID"` // 关联VIP等级
+	VipLevelID uint     `json:"vip_level_id" gorm:"column:vip_level_id;default:0"` // 外键指向vip_levels表
+	VipLevel   VipLevel `json:"vip_level" gorm:"foreignKey:VipLevelID"`            // 关联VIP等级
 }
 
 func (VipStatus) TableName() string {

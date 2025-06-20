@@ -8,6 +8,7 @@ import (
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/google/uuid"
+	"time"
 )
 
 type EgoClientUserService struct{}
@@ -26,6 +27,11 @@ func (ECUService *EgoClientUserService) CreateEgoClientUser(ctx context.Context,
 	pwdHash := utils.BcryptHash(*ECU.Password)
 	ECU.Password = &pwdHash
 	ECU.UUID, _ = uuid.NewV6()
+
+	ECU.VipStatus = egoclient.VipStatus{
+		ActivatedAt: time.Now(),
+		VipLevelID:  1,
+	}
 
 	err = global.GVA_DB.Create(ECU).Error
 	return err
