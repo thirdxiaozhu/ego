@@ -35,9 +35,45 @@ func (eModelService *EgoModelService) DeleteEgoModelByIds(ctx context.Context, I
 // UpdateEgoModel 更新模型记录
 // Author [yourname](https://github.com/yourname)
 func (eModelService *EgoModelService) UpdateEgoModel(ctx context.Context, eModel egoclient.EgoModel) (err error) {
-	fmt.Println("UpdateEgoModel", eModel)
-	err = global.GVA_DB.Model(&egoclient.EgoModel{}).Where("id = ?", eModel.ID).Updates(&eModel).Error
-	return err
+
+	tx := global.GVA_DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 1. 更新主模型数据 (排除关联字段)
+	if err = tx.Model(&egoclient.EgoModel{}).Where("id = ?", eModel.ID).
+		Omit("Limits"). // 关键：排除关联字段
+		Updates(&eModel).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	//2. 处理关联的Limits数据
+	if len(eModel.Limits) > 0 {
+		// 先删除所有旧关联
+		fmt.Println(eModel.ID)
+		if err = tx.Where("model_id = ?", eModel.ID).
+			Delete(&egoclient.EgoModelLimits{}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// 设置关联ID并创建新数据
+		for i := range eModel.Limits {
+			eModel.Limits[i].ModelID = eModel.ID
+		}
+		if err = tx.Create(&eModel.Limits).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	//
+	// 提交事务
+	return tx.Commit().Error
 }
 
 // GetEgoModel 根据ID获取模型记录

@@ -56,6 +56,7 @@ export const deleteEgoModelByIds = (params) => {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"更新成功"}"
 // @Router /eModel/updateEgoModel [put]
 export const updateEgoModel = (data) => {
+  console.log(data)
   return service({
     url: '/eModel/updateEgoModel',
     method: 'put',

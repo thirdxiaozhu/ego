@@ -22,7 +22,7 @@ func (EgoModel) TableName() string {
 }
 
 type EgoModelLimits struct {
-	global.GVA_MODEL
+	ID         uint `gorm:"primarykey" json:"ID"` // 主键ID
 	ModelID    uint `json:"modelID" grom:"primaryKey"`
 	VipLevelID uint `json:"levelID" grom:"primaryKey"`
 	CallLimits int  `json:"callLimits" form:"callLimits" gorm:"column:call_limits;"`
