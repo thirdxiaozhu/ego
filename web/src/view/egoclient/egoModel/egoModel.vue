@@ -129,6 +129,13 @@
         <el-form-item label="模型名称:" prop="modelName">
           <el-input v-model="formData.modelName" :clearable="true" placeholder="请输入模型名称" />
         </el-form-item>
+        <el-form-item
+          v-for="(item, index) in vipLevelOptions"
+          :key="index"
+          :label="item.label"
+        >
+          <el-input v-model.number="formData.limits[index].callLimits" :clearable="true" placeholder="请输入限制次数" />
+        </el-form-item>
       </el-form>
     </el-drawer>
 
@@ -143,6 +150,15 @@
         <el-descriptions-item label="模型名称">
           {{ detailFrom.modelName }}
         </el-descriptions-item>
+        <template>
+          <el-descriptions-item
+          v-for="(item, index) in detailFrom.limits"
+            :key="index"
+            :label="filterDict(item.levelID.toString(), vipLevelOptions)"
+          >
+            {{ item.callLimits }}
+          </el-descriptions-item>
+        </template>
       </el-descriptions>
     </el-drawer>
 
@@ -162,11 +178,8 @@
   // 全量引入格式化工具 请按需保留
   import { getDictFunc, formatDate, formatBoolean, filterDict ,filterDataSource, returnArrImg, onDownloadFile } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { ref, reactive } from 'vue'
+  import { ref, reactive, computed } from 'vue'
   import { useAppStore } from "@/pinia"
-
-
-
 
   defineOptions({
     name: 'EgoModel'
@@ -182,13 +195,41 @@
   // 自动化生成的字典（可能为空）以及字段
   const modelProviderOptions = ref([])
   const modelTypeOptions = ref([])
+  const vipLevelOptions = ref([])
   const formData = ref({
-    modelProvider: '',
-    modelType: '',
-    modelName: '',
-    normalTimes : 0,
-    vipTimes : 0,
   })
+
+  // ============== 表格控制部分结束 ===============
+
+  // 获取需要的字典 可能为空 按需保留
+  const setOptions = async () =>{
+    modelProviderOptions.value = await getDictFunc('model-provider')
+    modelTypeOptions.value = await getDictFunc('model-type')
+    vipLevelOptions.value = await getDictFunc('VIPLevel')
+  }
+
+  // 获取需要的字典 可能为空 按需保留
+  setOptions()
+
+  const initFormData = () => {
+    formData.value = {
+      modelProvider: '',
+      modelType: '',
+      modelName: '',
+      normalTimes : 0,
+      vipTimes : 0,
+      limits: [],
+    }
+
+    vipLevelOptions.value.forEach((item, index) => {
+      formData.value.limits.push({
+        levelID: parseInt(item.value),
+        callLimits: 0,
+      })
+
+    })
+    console.log(formData.value)
+  }
 
 
 
@@ -210,6 +251,15 @@
     searchInfo.value = {}
     getTableData()
   }
+
+  const getLimits = computed( (vipLevelID, items) => {
+    for (let index in items){
+      if(items[index].levelID === vipLevelID){
+        return items[index].callLimits
+      }
+    }
+    return null
+  })
 
   // 搜索
   const onSubmit = () => {
@@ -245,16 +295,7 @@
 
   getTableData()
 
-  // ============== 表格控制部分结束 ===============
 
-  // 获取需要的字典 可能为空 按需保留
-  const setOptions = async () =>{
-    modelProviderOptions.value = await getDictFunc('model-provider')
-    modelTypeOptions.value = await getDictFunc('model-type')
-  }
-
-  // 获取需要的字典 可能为空 按需保留
-  setOptions()
 
 
   // 多选数据
@@ -317,6 +358,18 @@
     type.value = 'update'
     if (res.code === 0) {
       formData.value = res.data
+
+      vipLevelOptions.value.forEach((item, index) => {
+        if(index < formData.value.limits.length) {
+          return
+        }
+        formData.value.limits.push({
+          levelID: parseInt(item.value),
+          callLimits: 0,
+        })
+
+      })
+      console.log(formData.value.limits[0].callLimits)
       dialogFormVisible.value = true
     }
   }
@@ -342,6 +395,7 @@
 
   // 打开弹窗
   const openDialog = () => {
+    initFormData()
     type.value = 'create'
     dialogFormVisible.value = true
   }
@@ -349,11 +403,7 @@
   // 关闭弹窗
   const closeDialog = () => {
     dialogFormVisible.value = false
-    formData.value = {
-      modelProvider: '',
-      modelType: '',
-      modelName: '',
-    }
+    initFormData()
   }
   // 弹窗确定
   const enterDialog = async () => {
@@ -379,7 +429,7 @@
           message: '创建/更改成功'
         })
         closeDialog()
-        getTableData()
+        await getTableData()
       }
     })
   }
@@ -402,6 +452,7 @@
     const res = await findEgoModel({ ID: row.ID })
     if (res.code === 0) {
       detailFrom.value = res.data
+
       openDetailShow()
     }
   }

@@ -23,7 +23,7 @@ func (i *initVipLevels) MigrateTable(ctx context.Context) (context.Context, erro
 	if !ok {
 		return ctx, system.ErrMissingDBContext
 	}
-	return ctx, db.AutoMigrate(&egoclient.VipLevel{})
+	return ctx, db.AutoMigrate(&egoclient.EgoVipLevel{})
 }
 
 func (i *initVipLevels) TableCreated(ctx context.Context) bool {
@@ -31,11 +31,11 @@ func (i *initVipLevels) TableCreated(ctx context.Context) bool {
 	if !ok {
 		return false
 	}
-	return db.Migrator().HasTable(&egoclient.VipLevel{})
+	return db.Migrator().HasTable(&egoclient.EgoVipLevel{})
 }
 
 func (i *initVipLevels) InitializerName() string {
-	return egoclient.VipLevel{}.TableName()
+	return egoclient.EgoVipLevel{}.TableName()
 }
 
 func (i *initVipLevels) InitializeData(ctx context.Context) (next context.Context, err error) {
@@ -43,7 +43,7 @@ func (i *initVipLevels) InitializeData(ctx context.Context) (next context.Contex
 	if !ok {
 		return ctx, system.ErrMissingDBContext
 	}
-	entities := []egoclient.VipLevel{
+	entities := []egoclient.EgoVipLevel{
 		{
 			Name:        "VIP0",
 			Level:       0,
@@ -76,7 +76,7 @@ func (i *initVipLevels) DataInserted(ctx context.Context) bool {
 	if !ok {
 		return false
 	}
-	var record egoclient.VipLevel
+	var record egoclient.EgoVipLevel
 	if errors.Is(db.Where("name = ?", "VIP0").First(&record).Error, gorm.ErrRecordNotFound) { // 判断是否存在数据
 		return false
 	}

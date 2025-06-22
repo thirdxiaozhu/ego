@@ -29,7 +29,7 @@ func (ECUService *EgoClientUserService) CreateEgoClientUser(ctx context.Context,
 	ECU.Password = &pwdHash
 	ECU.UUID, _ = uuid.NewV6()
 
-	ECU.VipStatus = egoclient.VipStatus{
+	ECU.VipStatus = egoclient.EgoVipStatus{
 		ActivatedAt: time.Now(),
 		VipLevelID:  1,
 	}
@@ -64,7 +64,7 @@ func (ECUService *EgoClientUserService) UpdateEgoClientUser(ctx context.Context,
 	if err = global.GVA_DB.Model(&egoclient.EgoClientUser{}).Where("id = ?", ECU.ID).Updates(&ECU).Error; err != nil {
 		return err
 	}
-	if err = global.GVA_DB.Model(&egoclient.VipStatus{}).Where("user_id = ?", ECU.ID).Updates(&ECU.VipStatus).Error; err != nil {
+	if err = global.GVA_DB.Model(&egoclient.EgoVipStatus{}).Where("user_id = ?", ECU.ID).Updates(&ECU.VipStatus).Error; err != nil {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func (ECUService *EgoClientUserService) UpdateEgoClientUser(ctx context.Context,
 // GetEgoClientUser 根据ID获取EGO用户记录
 // Author [yourname](https://github.com/yourname)
 func (ECUService *EgoClientUserService) GetEgoClientUser(ctx context.Context, ID string) (ECU egoclient.EgoClientUser, err error) {
-	err = global.GVA_DB.Where("id = ?", ID).Preload("VipStatus").Preload("VipStatus.VipLevel").First(&ECU).Error
+	err = global.GVA_DB.Where("id = ?", ID).Preload("EgoVipStatus").Preload("EgoVipStatus.EgoVipLevel").First(&ECU).Error
 	return
 }
 
@@ -162,4 +162,11 @@ func (ECUService *EgoClientUserService) Logout(ctx context.Context) (err error) 
 	// 请在这里实现自己的业务逻辑
 	db := global.GVA_DB.Model(&egoclient.EgoClientUser{})
 	return db.Error
+}
+
+// GetEgoClientUser 根据ID获取EGO用户记录
+// Author [yourname](https://github.com/yourname)
+func (ECUService *EgoClientUserService) GetEgoVipLevels() (ECVL []egoclient.EgoVipLevel, err error) {
+	err = global.GVA_DB.Model(&egoclient.EgoVipLevel{}).Find(&ECVL).Error
+	return
 }

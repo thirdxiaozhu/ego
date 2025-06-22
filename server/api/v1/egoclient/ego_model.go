@@ -30,7 +30,7 @@ func (eModelApi *EgoModelApi) CreateEgoModel(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = eModelService.CreateEgoModel(ctx, &eModel)
+	err = EMService.CreateEgoModel(ctx, &eModel)
 	if err != nil {
 		global.GVA_LOG.Error("创建失败!", zap.Error(err))
 		response.FailWithMessage("创建失败:"+err.Error(), c)
@@ -53,7 +53,7 @@ func (eModelApi *EgoModelApi) DeleteEgoModel(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	ID := c.Query("ID")
-	err := eModelService.DeleteEgoModel(ctx, ID)
+	err := EMService.DeleteEgoModel(ctx, ID)
 	if err != nil {
 		global.GVA_LOG.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败:"+err.Error(), c)
@@ -75,7 +75,7 @@ func (eModelApi *EgoModelApi) DeleteEgoModelByIds(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	IDs := c.QueryArray("IDs[]")
-	err := eModelService.DeleteEgoModelByIds(ctx, IDs)
+	err := EMService.DeleteEgoModelByIds(ctx, IDs)
 	if err != nil {
 		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
 		response.FailWithMessage("批量删除失败:"+err.Error(), c)
@@ -103,7 +103,7 @@ func (eModelApi *EgoModelApi) UpdateEgoModel(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = eModelService.UpdateEgoModel(ctx, eModel)
+	err = EMService.UpdateEgoModel(ctx, eModel)
 	if err != nil {
 		global.GVA_LOG.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败:"+err.Error(), c)
@@ -126,13 +126,30 @@ func (eModelApi *EgoModelApi) FindEgoModel(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	ID := c.Query("ID")
-	reeModel, err := eModelService.GetEgoModel(ctx, ID)
-	if err != nil {
+	var err error
+	var Model egoclient.EgoModel
+	//var Levels []egoclient.EgoVipLevel
+
+	if Model, err = EMService.GetEgoModel(ctx, ID); err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithMessage("查询失败:"+err.Error(), c)
 		return
 	}
-	response.OkWithData(reeModel, c)
+
+	//if Levels, err = ECUService.GetEgoVipLevels(); err != nil {
+	//	global.GVA_LOG.Error("查询失败!", zap.Error(err))
+	//	response.FailWithMessage("查询失败:"+err.Error(), c)
+	//	return
+	//}
+
+	//response.OkWithData(struct {
+	//	Model  egoclient.EgoModel      `json:"egoModel"`
+	//	Levels []egoclient.EgoVipLevel `json:"egoVipLevels"`
+	//}{
+	//	Model:  Model,
+	//	Levels: Levels,
+	//}, c)
+	response.OkWithData(Model, c)
 }
 
 // GetEgoModelList 分页获取模型列表
@@ -154,7 +171,7 @@ func (eModelApi *EgoModelApi) GetEgoModelList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	list, total, err := eModelService.GetEgoModelInfoList(ctx, pageInfo)
+	list, total, err := EMService.GetEgoModelInfoList(ctx, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败:"+err.Error(), c)
@@ -181,7 +198,7 @@ func (eModelApi *EgoModelApi) GetEgoModelAll(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
 
-	list, err := eModelService.GetEgoModelInfoAll(ctx)
+	list, err := EMService.GetEgoModelInfoAll(ctx)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败:"+err.Error(), c)
@@ -203,7 +220,7 @@ func (eModelApi *EgoModelApi) GetEgoModelPublic(c *gin.Context) {
 
 	// 此接口不需要鉴权
 	// 示例为返回了一个固定的消息接口，一般本接口用于C端服务，需要自己实现业务逻辑
-	eModelService.GetEgoModelPublic(ctx)
+	EMService.GetEgoModelPublic(ctx)
 	response.OkWithDetailed(gin.H{
 		"info": "不需要鉴权的模型接口信息",
 	}, "获取成功", c)

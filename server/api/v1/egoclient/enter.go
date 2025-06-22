@@ -9,7 +9,7 @@ type ApiGroup struct {
 }
 
 var (
-	ECUService    = service.ServiceGroupApp.EgoclientServiceGroup.EgoClientUserService
-	EDService     = service.ServiceGroupApp.EgoclientServiceGroup.EgoDialogueService
-	eModelService = service.ServiceGroupApp.EgoclientServiceGroup.EgoModelService
+	ECUService = service.ServiceGroupApp.EgoclientServiceGroup.EgoClientUserService
+	EDService  = service.ServiceGroupApp.EgoclientServiceGroup.EgoDialogueService
+	EMService  = service.ServiceGroupApp.EgoclientServiceGroup.EgoModelService
 )

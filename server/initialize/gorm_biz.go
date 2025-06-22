@@ -5,12 +5,17 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 )
 
-func bizModel() error {
+func bizModel() (err error) {
 	db := global.GVA_DB
-	err := db.AutoMigrate(egoclient.EgoClientUser{}, egoclient.EgoDialogue{}, egoclient.EgoModel{}, egoclient.EgoDialogueHistory{}, egoclient.EgoDialogueItem{},
-		egoclient.VipStatus{}, egoclient.VipLevel{})
+	//err = db.SetupJoinTable(egoclient.EgoModel{}, "VipLevels", egoclient.EgoModelLimits{})
+	//if err != nil {
+	//	return
+	//}
+	err = db.AutoMigrate(egoclient.EgoClientUser{}, egoclient.EgoDialogue{}, egoclient.EgoModel{}, egoclient.EgoDialogueHistory{}, egoclient.EgoDialogueItem{},
+		egoclient.EgoVipStatus{}, egoclient.EgoVipLevel{}, egoclient.EgoModelLimits{})
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+
+	return
 }

@@ -2,9 +2,11 @@ package egoclient
 
 import (
 	"context"
+	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"gorm.io/gorm"
 )
 
 type EgoModelService struct{}
@@ -33,6 +35,7 @@ func (eModelService *EgoModelService) DeleteEgoModelByIds(ctx context.Context, I
 // UpdateEgoModel 更新模型记录
 // Author [yourname](https://github.com/yourname)
 func (eModelService *EgoModelService) UpdateEgoModel(ctx context.Context, eModel egoclient.EgoModel) (err error) {
+	fmt.Println("UpdateEgoModel", eModel)
 	err = global.GVA_DB.Model(&egoclient.EgoModel{}).Where("id = ?", eModel.ID).Updates(&eModel).Error
 	return err
 }
@@ -40,7 +43,10 @@ func (eModelService *EgoModelService) UpdateEgoModel(ctx context.Context, eModel
 // GetEgoModel 根据ID获取模型记录
 // Author [yourname](https://github.com/yourname)
 func (eModelService *EgoModelService) GetEgoModel(ctx context.Context, ID string) (eModel egoclient.EgoModel, err error) {
-	err = global.GVA_DB.Where("id = ?", ID).First(&eModel).Error
+	//查询 EgoModel 时需要预加载关联的 Limits 并按 VipLevelID 升序排序。以下是完整实现方案：
+	err = global.GVA_DB.Where("id = ?", ID).Preload("Limits", func(db *gorm.DB) *gorm.DB {
+		return db.Order("ego_model_limits.vip_level_id ASC")
+	}).First(&eModel).Error
 	return
 }
 

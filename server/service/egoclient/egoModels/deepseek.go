@@ -31,12 +31,12 @@ func NewDeepseekService() *DeepseekService {
 func (s *DeepseekService) initAssemblers() {
 	s.ModelAssemble = map[consts.ModelType]map[string]AssembleFunc{
 		consts.ChatModel: {
-			"any": s.DeepSeekAssemble,
+			"deepseek-reasoner": s.DeepSeekReasonerAssemble,
 		},
 	}
 }
 
-func (s *DeepseekService) DeepSeekAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
 	fmt.Println("DeepSeekChatAssemble", *ED.User.UserID, Req.DialogueID, Req.Text)
 
 	model := consts.DeepSeekChat
