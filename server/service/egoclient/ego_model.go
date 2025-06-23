@@ -56,7 +56,7 @@ func (eModelService *EgoModelService) UpdateEgoModel(ctx context.Context, eModel
 		// 先删除所有旧关联
 		fmt.Println(eModel.ID)
 		if err = tx.Where("model_id = ?", eModel.ID).
-			Delete(&egoclient.EgoModelLimits{}).Error; err != nil {
+			Delete(&egoclient.EgoModelLimit{}).Error; err != nil {
 			tx.Rollback()
 			return err
 		}

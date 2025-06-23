@@ -3,7 +3,6 @@ package egoclient
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
@@ -59,7 +58,6 @@ func (ECUService *EgoClientUserService) UpdateEgoClientUser(ctx context.Context,
 	ECU.Password = nil
 	ECU.UserID = nil
 
-	fmt.Println("<UNK>", ECU.VipStatus.VipLevelID)
 	//Update方法自动过滤空值
 	if err = global.GVA_DB.Model(&egoclient.EgoClientUser{}).Where("id = ?", ECU.ID).Updates(&ECU).Error; err != nil {
 		return err
@@ -74,7 +72,7 @@ func (ECUService *EgoClientUserService) UpdateEgoClientUser(ctx context.Context,
 // GetEgoClientUser 根据ID获取EGO用户记录
 // Author [yourname](https://github.com/yourname)
 func (ECUService *EgoClientUserService) GetEgoClientUser(ctx context.Context, ID string) (ECU egoclient.EgoClientUser, err error) {
-	err = global.GVA_DB.Where("id = ?", ID).Preload("EgoVipStatus").Preload("EgoVipStatus.EgoVipLevel").First(&ECU).Error
+	err = global.GVA_DB.Where("id = ?", ID).Preload("VipStatus").Preload("VipStatus.VipLevel").First(&ECU).Error
 	return
 }
 
