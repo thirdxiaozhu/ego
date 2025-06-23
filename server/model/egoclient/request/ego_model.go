@@ -12,3 +12,10 @@ type EgoModelSearch struct {
 	ModelName      *string     `json:"modelName" form:"modelName"`
 	request.PageInfo
 }
+
+type EgoModelRecordDefine struct {
+	//CreatedAtRange []time.Time `json:"createdAtRange" form:"createdAtRange[]"`
+	UserID  uint       `json:"userID"`
+	ModelID uint       `json:"modelID"`
+	Date    *time.Time `gorm:"type:date"` // 只存储日期部分
+}

@@ -58,7 +58,7 @@ func (EDService *EgoDialogueService) GetEgoDialogue(ctx context.Context, ID stri
 // GetEgoDialogueByUuid 根据ID获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogueByUuid(ctx context.Context, Uuid string) (ED egoclient.EgoDialogue, err error) {
-	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").Preload("Histories").Preload("Items").First(&ED).Error
+	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("Model.Limits").Preload("User").Preload("User.VipStatus").Preload("Histories").Preload("Items").First(&ED).Error
 	return
 }
 
@@ -105,6 +105,15 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	if err != nil {
 		return errors.New("无法找到对话")
 	}
+
+	service := EgoModelService{}
+	_, err = service.CanCallModel(&ED, Req, func(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) int {
+		return 1
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 
 	//新的用户消息存入历史数据中
 	newHistory := egoclient.EgoDialogueHistory{

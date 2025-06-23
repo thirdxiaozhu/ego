@@ -12,7 +12,7 @@ func bizModel() (err error) {
 	//	return
 	//}
 	err = db.AutoMigrate(egoclient.EgoClientUser{}, egoclient.EgoDialogue{}, egoclient.EgoModel{}, egoclient.EgoDialogueHistory{}, egoclient.EgoDialogueItem{},
-		egoclient.EgoVipStatus{}, egoclient.EgoVipLevel{}, egoclient.EgoModelLimit{})
+		egoclient.EgoVipStatus{}, egoclient.EgoVipLevel{}, egoclient.EgoModelLimit{}, egoclient.EgoModelRecord{})
 	if err != nil {
 		return
 	}

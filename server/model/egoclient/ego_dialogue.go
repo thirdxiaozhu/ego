@@ -49,8 +49,8 @@ type EgoDialogue struct {
 	User      EgoClientUser        `json:"user" gorm:"foreignKey:ID;references:UserID;"`
 	ModelID   int                  `json:"modelID" form:"model" gorm:"column:model;"` //模型
 	Model     EgoModel             `json:"model" gorm:"foreignKey:ID;references:ModelID;"`
-	Items     []EgoDialogueItem    `json:"items" gorm:"foreignKey:ConversationID"`
-	Histories []EgoDialogueHistory `json:"histories" gorm:"foreignKey:ConversationID;"`
+	Items     []EgoDialogueItem    `json:"items" gorm:"foreignKey:ConversationID"`      //token使用情况
+	Histories []EgoDialogueHistory `json:"histories" gorm:"foreignKey:ConversationID;"` //历史记录
 }
 
 // TableName Ego对话 EgoDialogue自定义表名 ego_dialogue

@@ -29,11 +29,11 @@ type EgoModelLimit struct {
 	CallLimits int  `json:"callLimits" form:"callLimits" gorm:"column:call_limits;"`
 }
 type EgoModelRecord struct {
-	ID        uint      `gorm:"primarykey" json:"ID"` // 主键ID
+	//ID        uint      `gorm:"primarykey" json:"ID"` // 主键ID
 	UserID    uint      `json:"userID" gorm:"primaryKey"`
 	ModelID   uint      `json:"modelID" gorm:"primaryKey"`
+	Date      time.Time `gorm:"type:date;primaryKey"` // 只存储日期部分
 	CallTimes uint      `json:"callTimes" form:"callTimes" gorm:"column:call_times;"`
-	Date      time.Time `gorm:"type:date" gorm:"primaryKey"` // 只存储日期部分
 
 	Model EgoModel `json:"model" form:"model" gorm:"foreignKey: ModelID;"`
 }
