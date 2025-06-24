@@ -107,94 +107,90 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	}
 
 	service := EgoModelService{}
-	_, err = service.CanCallModel(&ED, Req, func(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) int {
-		return 1
-	})
-	if err != nil {
-		return err
-	}
-	return nil
+	err = service.CanCallModel(&ED, Req, func(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) error {
+		//新的用户消息存入历史数据中
+		newHistory := egoclient.EgoDialogueHistory{
+			Role:             egoclient.UserRole,
+			Item:             "",
+			IsChoice:         true,
+			ConversationID:   ED.ID,
+			ReasoningContent: "",
+			Content:          Req.Text,
+		}
+		if err = EDService.CreateEgoDialogueHistory(ctx, &newHistory); err != nil {
+			return err
+		}
+		ED.Histories = append(ED.Histories, newHistory)
 
-	//新的用户消息存入历史数据中
-	newHistory := egoclient.EgoDialogueHistory{
-		Role:             egoclient.UserRole,
-		Item:             "",
-		IsChoice:         true,
-		ConversationID:   ED.ID,
-		ReasoningContent: "",
-		Content:          Req.Text,
-	}
-	if err = EDService.CreateEgoDialogueHistory(ctx, &newHistory); err != nil {
-		return err
-	}
-	ED.Histories = append(ED.Histories, newHistory)
+		//发送请求
+		var resp httpclient.Response
+		if resp, err = egoModels.AssembleRequest(ED, Req); err != nil {
+			return err
+		}
+		streamResp := resp.(models.ChatResponseStream)
 
-	//发送请求
-	var resp httpclient.Response
-	if resp, err = egoModels.AssembleRequest(&ED, Req); err != nil {
-		return err
-	}
-	streamResp := resp.(models.ChatResponseStream)
+		go func() {
+			var Contents []models.ChatStreamContentBlock
+			var Item egoclient.EgoDialogueItem
 
-	go func() {
-		var Contents []models.ChatStreamContentBlock
-		var Item egoclient.EgoDialogueItem
+			for {
+				var (
+					item       models.ChatBaseResponse
+					isFinished bool
+				)
+				if item, isFinished, err = streamResp.StreamReader.Recv(); err != nil {
+					log.Printf("createChatCompletionStream error = %v, request_id = %s", err, aisdk.RequestID(err))
+					break
+				}
+				if isFinished {
+					//把choices里的内容逐条插入history库里
+					for _, v := range Contents {
+						history := egoclient.EgoDialogueHistory{
+							Role:             egoclient.AssistantRole,
+							Item:             Item.UUID,
+							ConversationID:   ED.ID,
+							ReasoningContent: v.ReasoningBuffer.String(),
+							Content:          v.ContentBuffer.String(),
+							IsChoice:         true,
+						}
 
-		for {
-			var (
-				item       models.ChatBaseResponse
-				isFinished bool
-			)
-			if item, isFinished, err = streamResp.StreamReader.Recv(); err != nil {
-				log.Printf("createChatCompletionStream error = %v, request_id = %s", err, aisdk.RequestID(err))
-				break
-			}
-			if isFinished {
-				//把choices里的内容逐条插入history库里
-				for _, v := range Contents {
-					history := egoclient.EgoDialogueHistory{
-						Role:             egoclient.AssistantRole,
-						Item:             Item.UUID,
-						ConversationID:   ED.ID,
-						ReasoningContent: v.ReasoningBuffer.String(),
-						Content:          v.ContentBuffer.String(),
-						IsChoice:         true,
+						if err = EDService.CreateEgoDialogueHistory(ctx, &history); err != nil {
+							return
+						}
 					}
+					break
+				}
+				log.Printf("createChatCompletionStream item = %+v", item)
 
-					if err = EDService.CreateEgoDialogueHistory(ctx, &history); err != nil {
+				//TODO: 在这里做返回前端的SSE
+				for _, v := range item.Choices {
+					for v.Index >= len(Contents) {
+						Contents = append(Contents, models.ChatStreamContentBlock{})
+					}
+					Contents[v.Index].ContentID = item.ID
+					Contents[v.Index].ContentID = item.ID
+					Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
+					Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
+				}
+				if item.Usage != nil && item.StreamStats != nil {
+					//存储token用量
+					Item.UUID = item.ID
+					Item.PromptTokens = item.Usage.PromptTokens
+					Item.ConversationID = ED.ID
+					Item.CompletionTokens = item.Usage.CompletionTokens
+					if err = EDService.CreateEgoDialogueItem(ctx, &Item); err != nil {
 						return
 					}
+					log.Printf("createChatCompletionStream usage = %+v", item.Usage)
+					log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
 				}
-				break
 			}
-			log.Printf("createChatCompletionStream item = %+v", item)
+		}()
 
-			//TODO: 在这里做返回前端的SSE
-			for _, v := range item.Choices {
-				for v.Index >= len(Contents) {
-					Contents = append(Contents, models.ChatStreamContentBlock{})
-				}
-				Contents[v.Index].ContentID = item.ID
-				Contents[v.Index].ContentID = item.ID
-				Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
-				Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
-			}
-			if item.Usage != nil && item.StreamStats != nil {
-				//存储token用量
-				Item.UUID = item.ID
-				Item.PromptTokens = item.Usage.PromptTokens
-				Item.ConversationID = ED.ID
-				Item.CompletionTokens = item.Usage.CompletionTokens
-				if err = EDService.CreateEgoDialogueItem(ctx, &Item); err != nil {
-					return
-				}
-				log.Printf("createChatCompletionStream usage = %+v", item.Usage)
-				log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
-			}
-		}
-	}()
+		return nil
+	})
+	return err
 
-	return nil
 }
 
 // CreateEgoDialogueHistory 创建Ego对话历史记录

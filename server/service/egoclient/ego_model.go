@@ -138,33 +138,23 @@ func (eModelService *EgoModelService) GetEgoModelInfoAll(ctx context.Context) (l
 	return
 }
 
-func (eModelService *EgoModelService) CreateCallRecord(EMRS egoclientReq.EgoModelRecordDefine) (err error) {
-	//fmt.Println("!!!!!!!!!!!!1")
-	//err = global.GVA_DB.Create().Error
-	return
-}
-
 func (eModelService *EgoModelService) GetCallRecord(EMRS egoclient.EgoModelRecord) (record egoclient.EgoModelRecord, err error) {
-
 	err = global.GVA_DB.Where(EMRS).Attrs(egoclient.EgoModelRecord{CallTimes: 0}).FirstOrCreate(&record).Error
-
 	return
 }
 
-type ModelOperation func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) int
+func (eModelService *EgoModelService) SetCallRecord(EMRS egoclient.EgoModelRecord) (err error) {
+	err = global.GVA_DB.Updates(&EMRS).Error
+	return
+}
 
-func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg, operation ModelOperation) (b bool, err error) {
+type ModelOperation func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) error
+
+func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg, operation ModelOperation) (err error) {
 
 	//当前是北京时间，如果未来要改成UTC时间，改为 time.Now().UTC()（国际化）
 	now := time.Now()
 	currDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-
-	//tx := global.GVA_DB.Begin()
-	//defer func() {
-	//	if r := recover(); r != nil {
-	//		tx.Rollback()
-	//	}
-	//}()
 
 	record := egoclient.EgoModelRecord{
 		UserID:  ED.User.ID,
@@ -181,16 +171,22 @@ func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Re
 		}
 	}
 	if limits == 0 {
-		return false, errors.New("模型不可用")
+		return errors.New("模型不可用")
 	}
 
-	if limits != -1 && record.CallTimes > uint(limits) {
-		return false, errors.New("当日用量已达上限")
+	if limits != -1 && record.CallTimes >= uint(limits) {
+		return errors.New("当日用量已达上限")
 	}
 
-	operation(ED, Req)
+	err = operation(ED, Req)
+	if err != nil {
+		return err
+	}
 
 	//TODO:6.24 更新CallTimes+1
+	record.CallTimes++
+	err = eModelService.SetCallRecord(record)
+
 	fmt.Println(record)
-	return
+	return nil
 }
