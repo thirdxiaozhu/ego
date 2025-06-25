@@ -6,50 +6,50 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/liusuxian/go-aisdk/consts"
-	httpclient "github.com/liusuxian/go-aisdk/httpclient"
+	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
 	"time"
 )
 
 func init() {
-	RegisterService("deepseek", func() Service {
-		return NewDeepseekService()
+	RegisterService("alibl", func() Service {
+		return NewAliBLService()
 	})
 }
 
-type DeepseekService struct {
+type AliBLService struct {
 	BasicService
 }
 
-func NewDeepseekService() *DeepseekService {
-	ds := &DeepseekService{}
+func NewAliBLService() *AliBLService {
+	ds := &AliBLService{}
 	ds.initAssemblers()
 	return ds
 }
 
-func (s *DeepseekService) initAssemblers() {
+func (s *AliBLService) initAssemblers() {
 	s.ModelAssemble = map[consts.ModelType]map[string]AssembleFunc{
 		consts.ChatModel: {
-			"any": s.DeepSeekReasonerAssemble,
+			"qwq-plus": s.AliBLQwQPlusAssemble,
 		},
 	}
 }
 
-func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
-	model := consts.DeepSeekChat
-	if Req.Reasoning {
-		model = consts.DeepSeekReasoner
-	}
+func (s *AliBLService) AliBLQwQPlusAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
 
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
 	chatReq := models.ChatRequest{
-		Provider: consts.DeepSeek,
-		Model:    model,
+		Provider: ED.Model.ModelProvider,
+		Model:    *ED.Model.ModelName,
 		UserInfo: models.UserInfo{
 			UserID: *ED.User.UserID,
 		},
 		Stream:              true,
+		EnableThinking:      Req.Reasoning,
 		MaxCompletionTokens: 4096,
+		StreamOptions: &models.ChatStreamOptions{
+			IncludeUsage: true,
+		},
 	}
 	//插入历史消息
 	for _, v := range ED.Histories {

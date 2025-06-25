@@ -130,6 +130,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 		streamResp := resp.(models.ChatResponseStream)
 
 		go func() {
+
 			var Contents []models.ChatStreamContentBlock
 			var Item egoclient.EgoDialogueItem
 
