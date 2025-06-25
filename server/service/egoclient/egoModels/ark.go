@@ -1,6 +1,10 @@
 package egoModels
 
-import "github.com/liusuxian/go-aisdk/consts"
+import (
+	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/liusuxian/go-aisdk/consts"
+	"github.com/liusuxian/go-aisdk/models"
+)
 
 type ArkService struct {
 	BasicService
@@ -19,4 +23,9 @@ func init() {
 			},
 		}
 	})
+}
+
+func (s *ArkService) ParseRequestModal(Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
+
+	return nil, nil
 }

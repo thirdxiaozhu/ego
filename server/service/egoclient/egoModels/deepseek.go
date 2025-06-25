@@ -2,6 +2,7 @@ package egoModels
 
 import (
 	"context"
+	"errors"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
@@ -35,6 +36,17 @@ func (s *DeepseekService) initAssemblers() {
 	}
 }
 
+func (s *DeepseekService) ParseRequestModal(Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
+	userMsg := &models.UserMessage{
+		Content: Req.Text,
+	}
+	if len(Req.Multimodal) != 0 {
+		return nil, errors.New("deepseek 不支持多模态输入")
+	}
+
+	return userMsg, nil
+}
+
 func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
 	model := consts.DeepSeekChat
 	if Req.Reasoning {
@@ -55,6 +67,14 @@ func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Re
 	for _, v := range ED.Histories {
 		chatReq.Messages = append(chatReq.Messages, v.Role.GetMessage(v.Content, v.ReasoningContent))
 	}
+
+	//插入用户当前消息
+	var userMsg *models.UserMessage
+	var err error
+	if userMsg, err = s.ParseRequestModal(Req); err != nil {
+		return nil, err
+	}
+	chatReq.Messages = append(chatReq.Messages, userMsg)
 
 	return global.AiSDK.CreateChatCompletionStream(ctx, chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
 }

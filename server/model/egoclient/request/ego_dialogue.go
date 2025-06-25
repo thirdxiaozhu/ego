@@ -2,6 +2,7 @@ package request
 
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
+	"github.com/liusuxian/go-aisdk/models"
 	"time"
 )
 
@@ -13,8 +14,9 @@ type EgoDialogueSearch struct {
 }
 
 type EgoDialogueMultiModal struct {
-	Type string `json:"type" form:"type"`
-	Url  string `json:"url" form:"url"`
+	Type models.ChatUserMsgPartType `json:"type" form:"type"`
+	Text string                     `json:"text" form:"text"`
+	Url  string                     `json:"url" form:"url"`
 }
 
 type EgoDialoguePostUserMsg struct {

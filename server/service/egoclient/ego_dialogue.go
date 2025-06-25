@@ -108,26 +108,24 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 
 	service := EgoModelService{}
 	err = service.CanCallModel(&ED, Req, func(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) error {
-		//新的用户消息存入历史数据中
-		newHistory := egoclient.EgoDialogueHistory{
-			Role:             egoclient.UserRole,
-			Item:             "",
-			IsChoice:         true,
-			ConversationID:   ED.ID,
-			ReasoningContent: "",
-			Content:          Req.Text,
-		}
-		if err = EDService.CreateEgoDialogueHistory(ctx, &newHistory); err != nil {
-			return err
-		}
-		ED.Histories = append(ED.Histories, newHistory)
-
 		//发送请求
 		var resp httpclient.Response
 		if resp, err = egoModels.AssembleRequest(ED, Req); err != nil {
 			return err
 		}
 		streamResp := resp.(models.ChatResponseStream)
+
+		// 在收到回复消息之前，把用户的当前消息上传History
+		if err = EDService.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
+			Role:             egoclient.UserRole,
+			Item:             "",
+			IsChoice:         true,
+			DialogueID:       ED.ID,
+			ReasoningContent: "",
+			Content:          Req.Text,
+		}); err != nil {
+			return err
+		}
 
 		go func() {
 
@@ -149,7 +147,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 						history := egoclient.EgoDialogueHistory{
 							Role:             egoclient.AssistantRole,
 							Item:             Item.UUID,
-							ConversationID:   ED.ID,
+							DialogueID:       ED.ID,
 							ReasoningContent: v.ReasoningBuffer.String(),
 							Content:          v.ContentBuffer.String(),
 							IsChoice:         true,
@@ -177,7 +175,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 					//存储token用量
 					Item.UUID = item.ID
 					Item.PromptTokens = item.Usage.PromptTokens
-					Item.ConversationID = ED.ID
+					Item.DialogueID = ED.ID
 					Item.CompletionTokens = item.Usage.CompletionTokens
 					if err = EDService.CreateEgoDialogueItem(ctx, &Item); err != nil {
 						return
