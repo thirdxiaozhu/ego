@@ -183,7 +183,7 @@ func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Re
 		return err
 	}
 
-	//TODO:6.24 更新CallTimes+1
+	//更新CallTimes+1
 	record.CallTimes++
 	err = eModelService.SetCallRecord(record)
 

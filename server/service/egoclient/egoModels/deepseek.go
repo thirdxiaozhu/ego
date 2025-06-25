@@ -2,7 +2,6 @@ package egoModels
 
 import (
 	"context"
-	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
@@ -31,14 +30,12 @@ func NewDeepseekService() *DeepseekService {
 func (s *DeepseekService) initAssemblers() {
 	s.ModelAssemble = map[consts.ModelType]map[string]AssembleFunc{
 		consts.ChatModel: {
-			"deepseek-reasoner": s.DeepSeekReasonerAssemble,
+			"any": s.DeepSeekReasonerAssemble,
 		},
 	}
 }
 
 func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
-	fmt.Println("DeepSeekChatAssemble", *ED.User.UserID, Req.DialogueID, Req.Text)
-
 	model := consts.DeepSeekChat
 	if Req.Reasoning {
 		model = consts.DeepSeekReasoner

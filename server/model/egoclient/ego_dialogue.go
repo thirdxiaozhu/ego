@@ -19,21 +19,21 @@ const (
 func (role RoleType) GetMessage(content, reasonContent string) models.ChatMessage {
 	switch role {
 	case SystemRole:
-		return models.SystemMessage{
+		return &models.SystemMessage{
 			Content: content,
 		}
 	case UserRole:
-		return models.UserMessage{
+		return &models.UserMessage{
 			Content: content,
 		}
 	case AssistantRole:
-		return models.AssistantMessage{
+		return &models.AssistantMessage{
 			Content: content,
 			//Prefix:           true,
 			//ReasoningContent: reasonContent,
 		}
 	case ToolRole:
-		return models.ToolMessage{
+		return &models.ToolMessage{
 			Content: content,
 		}
 	default:

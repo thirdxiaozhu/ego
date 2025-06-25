@@ -97,7 +97,7 @@
         </el-table-column>
         <el-table-column align="left" label="操作" fixed="right" :min-width="appStore.operateMinWith">
           <template #default="scope">
-            <el-button plain @click="adminChangePasswordFunc(scope.row)">修改密码</el-button>
+            <el-button type="primary" link class="table-button" @click="adminChangePasswordFunc(scope.row)">修改密码</el-button>
             <el-button  type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
             <el-button  type="primary" link icon="edit" class="table-button" @click="updateEgoClientUserFunc(scope.row)">编辑</el-button>
             <el-button   type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
