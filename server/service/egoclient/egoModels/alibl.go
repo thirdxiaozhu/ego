@@ -50,8 +50,15 @@ func CheckModalValid(modelName string, toMatch ...string) bool {
 }
 
 func (s *AliBLService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
-	userMsg := &models.UserMessage{
-		Content: Req.Text,
+	userMsg := &models.UserMessage{}
+
+	if len(Req.Multimodal) == 0 {
+		userMsg.Content = Req.Text
+	} else {
+		userMsg.MultimodalContent = append(userMsg.MultimodalContent, models.ChatUserMsgPart{
+			Type: models.ChatUserMsgPartTypeText,
+			Text: Req.Text,
+		})
 	}
 
 	for _, modal := range Req.Multimodal {
