@@ -3,12 +3,14 @@ package egoModels
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/liusuxian/go-aisdk/consts"
 	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
+	"strings"
 	"time"
 )
 
@@ -31,12 +33,23 @@ func NewAliBLService() *AliBLService {
 func (s *AliBLService) initAssemblers() {
 	s.ModelAssemble = map[consts.ModelType]map[string]AssembleFunc{
 		consts.ChatModel: {
-			"qwq-plus": s.AliBLQwQPlusAssemble,
+			consts.AliBLQwqPlus: s.AliBLQwqPlusAssemble,
+			consts.AliBLQvqMax:  s.AliBLQwqPlusAssemble,
 		},
 	}
 }
 
-func (s *AliBLService) ParseRequestModal(Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
+func CheckModalValid(modelName string, toMatch ...string) bool {
+	fmt.Println("!!!!!!!!!!!!!!!", modelName)
+	for _, match := range toMatch {
+		if strings.Contains(modelName, match) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *AliBLService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
 	userMsg := &models.UserMessage{
 		Content: Req.Text,
 	}
@@ -48,11 +61,17 @@ func (s *AliBLService) ParseRequestModal(Req *egoclientReq.EgoDialoguePostUserMs
 
 		switch modal.Type {
 		case models.ChatUserMsgPartTypeText:
+			if CheckModalValid(ModelName, "qwen-vl", "qvq", "qwen-omni") != true {
+				return nil, errors.New(fmt.Sprintf("该模型不支持多模态类型 %s", modal.Type))
+			}
 			userMsgPart.Text = modal.Text
 		case models.ChatUserMsgPartTypeImageURL:
+			if CheckModalValid(ModelName, "qwen-vl", "qvq", "qwen-omni") != true {
+				return nil, errors.New(fmt.Sprintf("该模型不支持多模态类型 %s", modal.Type))
+			}
 			userMsgPart.ImageURL = &models.ChatUserMsgImageURL{URL: modal.Url}
 		default:
-			return nil, errors.New("多模态类型错误")
+			return nil, errors.New("不支持的多模态类型")
 		}
 
 		userMsg.MultimodalContent = append(userMsg.MultimodalContent, userMsgPart)
@@ -61,7 +80,7 @@ func (s *AliBLService) ParseRequestModal(Req *egoclientReq.EgoDialoguePostUserMs
 	return userMsg, nil
 }
 
-func (s *AliBLService) AliBLQwQPlusAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+func (s *AliBLService) AliBLQwqPlusAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
 
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
 	chatReq := models.ChatRequest{
@@ -86,7 +105,7 @@ func (s *AliBLService) AliBLQwQPlusAssemble(ED *egoclient.EgoDialogue, Req *egoc
 	//插入用户当前消息
 	var userMsg *models.UserMessage
 	var err error
-	if userMsg, err = s.ParseRequestModal(Req); err != nil {
+	if userMsg, err = s.ParseChatModal(*ED.Model.ModelName, Req); err != nil {
 		return nil, err
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)

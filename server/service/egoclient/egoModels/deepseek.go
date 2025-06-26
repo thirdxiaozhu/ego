@@ -36,7 +36,7 @@ func (s *DeepseekService) initAssemblers() {
 	}
 }
 
-func (s *DeepseekService) ParseRequestModal(Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
+func (s *DeepseekService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
 	userMsg := &models.UserMessage{
 		Content: Req.Text,
 	}
@@ -71,7 +71,7 @@ func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Re
 	//插入用户当前消息
 	var userMsg *models.UserMessage
 	var err error
-	if userMsg, err = s.ParseRequestModal(Req); err != nil {
+	if userMsg, err = s.ParseChatModal("", Req); err != nil {
 		return nil, err
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)

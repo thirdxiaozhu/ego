@@ -25,7 +25,7 @@ func init() {
 	})
 }
 
-func (s *ArkService) ParseRequestModal(Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
+func (s *ArkService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
 
 	return nil, nil
 }
