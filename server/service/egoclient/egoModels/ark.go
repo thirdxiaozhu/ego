@@ -3,7 +3,6 @@ package egoModels
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
@@ -56,14 +55,8 @@ func (s *ArkService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialo
 
 		switch modal.Type {
 		case models.ChatUserMsgPartTypeText:
-			if CheckModalValid(ModelName, "qwen-vl", "qvq", "qwen-omni") != true {
-				return nil, errors.New(fmt.Sprintf("该模型不支持多模态类型 %s", modal.Type))
-			}
 			userMsgPart.Text = modal.Text
 		case models.ChatUserMsgPartTypeImageURL:
-			if CheckModalValid(ModelName, "qwen-vl", "qvq", "qwen-omni") != true {
-				return nil, errors.New(fmt.Sprintf("该模型不支持多模态类型 %s", modal.Type))
-			}
 			userMsgPart.ImageURL = &models.ChatUserMsgImageURL{URL: modal.Url}
 		default:
 			return nil, errors.New("不支持的多模态类型")

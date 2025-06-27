@@ -1,6 +1,7 @@
 package egoclient
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -106,6 +107,13 @@ func (EDService *EgoDialogueService) GetEgoDialoguePublic(ctx context.Context) {
 	// 请自行实现
 }
 
+type ChatStreamContentBlock struct {
+	ContentID         string
+	SystemFingerprint string
+	ContentBuffer     bytes.Buffer
+	ReasoningBuffer   bytes.Buffer
+}
+
 // PostEgoDialogueUserMsg 创建Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context, Req *egoclientReq.EgoDialoguePostUserMsg) error {
@@ -137,7 +145,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 
 		go func() {
 
-			var Contents []models.ChatStreamContentBlock
+			var Contents []ChatStreamContentBlock
 			var Item egoclient.EgoDialogueItem
 
 			for {
@@ -172,9 +180,8 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 				//TODO: 在这里做返回前端的SSE
 				for _, v := range item.Choices {
 					for v.Index >= len(Contents) {
-						Contents = append(Contents, models.ChatStreamContentBlock{})
+						Contents = append(Contents, ChatStreamContentBlock{})
 					}
-					Contents[v.Index].ContentID = item.ID
 					Contents[v.Index].ContentID = item.ID
 					Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
 					Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
