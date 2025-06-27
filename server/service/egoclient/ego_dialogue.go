@@ -13,6 +13,7 @@ import (
 	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
 	"log"
+	"strconv"
 )
 
 type EgoDialogueService struct{}
@@ -22,6 +23,13 @@ type EgoDialogueService struct{}
 func (EDService *EgoDialogueService) CreateEgoDialogue(ctx context.Context, userid uint, ED *egoclient.EgoDialogue) (err error) {
 	ED.UserID = userid
 	ED.UUID, _ = uuid.NewV6()
+
+	emService := EgoModelService{}
+	_, err = emService.GetEgoModel(ctx, strconv.Itoa(ED.ModelID))
+	if err != nil {
+		return err
+	}
+
 	err = global.GVA_DB.Create(ED).Error
 	return err
 }

@@ -20,8 +20,9 @@ type EgoDialogueMultiModal struct {
 }
 
 type EgoDialoguePostUserMsg struct {
-	DialogueID string                  `json:"dialogue_id" form:"dialogueId"`
-	Text       string                  `json:"text" form:"text"`
-	Reasoning  bool                    `json:"reasoning" form:"reasoning"`
-	Multimodal []EgoDialogueMultiModal `json:"multimodal" form:"multimodal"`
+	DialogueID    string                  `json:"dialogue_id" form:"dialogueId"`
+	Text          string                  `json:"text" form:"text"`
+	Reasoning     bool                    `json:"reasoning" form:"reasoning"`
+	ReasoningMode string                  `json:"reasoning_mode" form:"reasoningMode"`
+	Multimodal    []EgoDialogueMultiModal `json:"multimodal" form:"multimodal"`
 }

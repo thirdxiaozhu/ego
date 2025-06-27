@@ -40,7 +40,6 @@ func (s *AliBLService) initAssemblers() {
 }
 
 func CheckModalValid(modelName string, toMatch ...string) bool {
-	fmt.Println("!!!!!!!!!!!!!!!", modelName)
 	for _, match := range toMatch {
 		if strings.Contains(modelName, match) {
 			return true
