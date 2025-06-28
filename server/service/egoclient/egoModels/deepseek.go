@@ -36,11 +36,14 @@ func (s *DeepseekService) initAssemblers() {
 	}
 }
 
-func (s *DeepseekService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
-	userMsg := &models.UserMessage{
-		Content: Req.Text,
+func (s *DeepseekService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
+	if modals == nil {
+		return nil, errors.New("错误的请求格式")
 	}
-	if len(Req.Multimodal) != 0 {
+	userMsg := &models.UserMessage{
+		Content: Text,
+	}
+	if len(modals) != 0 {
 		return nil, errors.New("deepseek 不支持多模态输入")
 	}
 
@@ -48,8 +51,11 @@ func (s *DeepseekService) ParseChatModal(ModelName string, Req *egoclientReq.Ego
 }
 
 func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+	if Req.ChatOption == nil {
+		return nil, errors.New("错误的请求格式")
+	}
 	model := consts.DeepSeekChat
-	if Req.Reasoning {
+	if Req.ChatOption.Reasoning {
 		model = consts.DeepSeekReasoner
 	}
 
@@ -71,7 +77,7 @@ func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Re
 	//插入用户当前消息
 	var userMsg *models.UserMessage
 	var err error
-	if userMsg, err = s.ParseChatModal("", Req); err != nil {
+	if userMsg, err = s.ParseChatModal("", Req.Text, Req.ChatOption.Multimodal); err != nil {
 		return nil, err
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)

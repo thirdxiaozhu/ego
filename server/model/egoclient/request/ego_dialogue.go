@@ -19,10 +19,18 @@ type EgoDialogueMultiModal struct {
 	Url  string                     `json:"url" form:"url"`
 }
 
-type EgoDialoguePostUserMsg struct {
-	DialogueID    string                  `json:"dialogue_id" form:"dialogueId"`
-	Text          string                  `json:"text" form:"text"`
+type UserMsgChatOption struct {
 	Reasoning     bool                    `json:"reasoning" form:"reasoning"`
 	ReasoningMode string                  `json:"reasoning_mode" form:"reasoningMode"`
 	Multimodal    []EgoDialogueMultiModal `json:"multimodal" form:"multimodal"`
+}
+
+type UserMsgImageOption struct {
+}
+
+type EgoDialoguePostUserMsg struct {
+	DialogueID  string              `json:"dialogue_id" form:"dialogueId"`
+	Text        string              `json:"text" form:"text"`
+	ChatOption  *UserMsgChatOption  `json:"chat" form:"chat"`
+	ImageOption *UserMsgImageOption `json:"image" form:"image"`
 }

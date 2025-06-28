@@ -33,22 +33,28 @@ func (s *ArkService) initAssemblers() {
 		consts.ChatModel: {
 			consts.Doubaoseed1_6: s.DoubaoSeedAssemble,
 		},
+		consts.ImageModel: {
+			consts.Doubaoseedream3: s.DoubaoSeedReamAssemble,
+		},
 	}
 }
 
-func (s *ArkService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
+func (s *ArkService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
+	if modals == nil {
+		return nil, errors.New("错误的请求格式")
+	}
 	userMsg := &models.UserMessage{}
 
-	if len(Req.Multimodal) == 0 {
-		userMsg.Content = Req.Text
+	if len(modals) == 0 {
+		userMsg.Content = Text
 	} else {
 		userMsg.MultimodalContent = append(userMsg.MultimodalContent, models.ChatUserMsgPart{
 			Type: models.ChatUserMsgPartTypeText,
-			Text: Req.Text,
+			Text: Text,
 		})
 	}
 
-	for _, modal := range Req.Multimodal {
+	for _, modal := range modals {
 		userMsgPart := models.ChatUserMsgPart{
 			Type: modal.Type,
 		}
@@ -58,6 +64,8 @@ func (s *ArkService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialo
 			userMsgPart.Text = modal.Text
 		case models.ChatUserMsgPartTypeImageURL:
 			userMsgPart.ImageURL = &models.ChatUserMsgImageURL{URL: modal.Url}
+		case models.ChatUserMsgPartTypeVideoURL:
+			userMsgPart.VideoURL = &models.ChatUserMsgVideoURL{URL: modal.Url}
 		default:
 			return nil, errors.New("不支持的多模态类型")
 		}
@@ -69,6 +77,9 @@ func (s *ArkService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialo
 }
 
 func (s *ArkService) DoubaoSeedAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+	if Req.ChatOption == nil {
+		return nil, errors.New("错误的请求格式")
+	}
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
 	chatReq := models.ChatRequest{
 		Provider: ED.Model.ModelProvider,
@@ -83,9 +94,9 @@ func (s *ArkService) DoubaoSeedAssemble(ED *egoclient.EgoDialogue, Req *egoclien
 		},
 	}
 
-	if Req.Reasoning == true {
+	if Req.ChatOption.Reasoning == true {
 		chatReq.Thinking = &models.ChatThinkingOptions{
-			Type: Req.ReasoningMode,
+			Type: Req.ChatOption.ReasoningMode,
 		}
 	}
 
@@ -97,10 +108,31 @@ func (s *ArkService) DoubaoSeedAssemble(ED *egoclient.EgoDialogue, Req *egoclien
 	//插入用户当前消息
 	var userMsg *models.UserMessage
 	var err error
-	if userMsg, err = s.ParseChatModal(*ED.Model.ModelName, Req); err != nil {
+	if userMsg, err = s.ParseChatModal(*ED.Model.ModelName, Req.Text, Req.ChatOption.Multimodal); err != nil {
 		return nil, err
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)
 
 	return global.AiSDK.CreateChatCompletionStream(ctx, chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
+}
+
+func (s *ArkService) DoubaoSeedReamAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+	if Req.ImageOption == nil {
+		return nil, errors.New("错误的请求格式")
+	}
+	ctx := context.WithValue(context.Background(), "Dialogue", ED)
+	imageReq := models.ImageRequest{
+		Provider: ED.Model.ModelProvider,
+		Model:    *ED.Model.ModelName,
+		UserInfo: models.UserInfo{
+			UserID: *ED.User.UserID,
+		},
+		Prompt: Req.Text,
+		Size:   models.ImageSize1024x1024,
+	}
+	imgResp, err := global.AiSDK.CreateImage(ctx, imageReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
+	if err != nil {
+		return nil, err
+	}
+	return &imgResp, nil
 }

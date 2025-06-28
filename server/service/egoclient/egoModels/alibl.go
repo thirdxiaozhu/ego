@@ -48,19 +48,22 @@ func CheckModalValid(modelName string, toMatch ...string) bool {
 	return false
 }
 
-func (s *AliBLService) ParseChatModal(ModelName string, Req *egoclientReq.EgoDialoguePostUserMsg) (*models.UserMessage, error) {
+func (s *AliBLService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
+	if modals == nil {
+		return nil, errors.New("错误的请求格式")
+	}
 	userMsg := &models.UserMessage{}
 
-	if len(Req.Multimodal) == 0 {
-		userMsg.Content = Req.Text
+	if len(modals) == 0 {
+		userMsg.Content = Text
 	} else {
 		userMsg.MultimodalContent = append(userMsg.MultimodalContent, models.ChatUserMsgPart{
 			Type: models.ChatUserMsgPartTypeText,
-			Text: Req.Text,
+			Text: Text,
 		})
 	}
 
-	for _, modal := range Req.Multimodal {
+	for _, modal := range modals {
 		userMsgPart := models.ChatUserMsgPart{
 			Type: modal.Type,
 		}
@@ -96,7 +99,7 @@ func (s *AliBLService) AliBLQwqPlusAssemble(ED *egoclient.EgoDialogue, Req *egoc
 			UserID: *ED.User.UserID,
 		},
 		Stream:              true,
-		EnableThinking:      Req.Reasoning, //Qwen3 默认开启thinking
+		EnableThinking:      Req.ChatOption.Reasoning, //Qwen3 默认开启thinking
 		MaxCompletionTokens: 4096,
 		StreamOptions: &models.ChatStreamOptions{
 			IncludeUsage: true,
@@ -111,7 +114,7 @@ func (s *AliBLService) AliBLQwqPlusAssemble(ED *egoclient.EgoDialogue, Req *egoc
 	//插入用户当前消息
 	var userMsg *models.UserMessage
 	var err error
-	if userMsg, err = s.ParseChatModal(*ED.Model.ModelName, Req); err != nil {
+	if userMsg, err = s.ParseChatModal(*ED.Model.ModelName, Req.Text, Req.ChatOption.Multimodal); err != nil {
 		return nil, err
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)

@@ -126,7 +126,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	err = service.CanCallModel(&ED, Req, func(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) error {
 		//发送请求
 		var resp httpclient.Response
-		if resp, err = egoModels.AssembleRequest(ED, Req); err != nil {
+		if resp, err = egoModels.AssembleRequest(ED, Req); err != nil || resp == nil {
 			return err
 		}
 		streamResp := resp.(models.ChatResponseStream)
