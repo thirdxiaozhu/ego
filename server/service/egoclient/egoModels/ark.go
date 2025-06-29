@@ -23,26 +23,23 @@ type ArkService struct {
 }
 
 func NewArkService() *ArkService {
-	ds := &ArkService{}
-	ds.initAssemblers()
-	return ds
+	service := &ArkService{}
+	service.initAssemblers()
+	return service
 }
 
 func (s *ArkService) initAssemblers() {
-	s.ModelAssemble = map[consts.ModelType]map[string]AssembleFunc{
+	s.ModelHandlers = map[consts.ModelType]map[string]*ModelHandler{
 		consts.ChatModel: {
-			consts.Doubaoseed1_6: s.DoubaoSeedAssemble,
+			consts.Doubaoseed1_6: &ModelHandler{s.DoubaoSeedAssemble, nil},
 		},
 		consts.ImageModel: {
-			consts.Doubaoseedream3: s.DoubaoSeedReamAssemble,
+			consts.Doubaoseedream3: &ModelHandler{s.DoubaoSeedReamAssemble, nil},
 		},
 	}
 }
 
 func (s *ArkService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
-	if modals == nil {
-		return nil, errors.New("错误的请求格式")
-	}
 	userMsg := &models.UserMessage{}
 
 	if len(modals) == 0 {
@@ -128,7 +125,7 @@ func (s *ArkService) DoubaoSeedReamAssemble(ED *egoclient.EgoDialogue, Req *egoc
 			UserID: *ED.User.UserID,
 		},
 		Prompt: Req.Text,
-		Size:   models.ImageSize1024x1024,
+		Size:   models.ImageSize(Req.ImageOption.Size),
 	}
 	imgResp, err := global.AiSDK.CreateImage(ctx, imageReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
 	if err != nil {

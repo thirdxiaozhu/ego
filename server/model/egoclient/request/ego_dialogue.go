@@ -26,6 +26,7 @@ type UserMsgChatOption struct {
 }
 
 type UserMsgImageOption struct {
+	Size string `json:"size" form:"size"`
 }
 
 type EgoDialoguePostUserMsg struct {

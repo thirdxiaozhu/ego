@@ -125,11 +125,22 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	service := EgoModelService{}
 	err = service.CanCallModel(&ED, Req, func(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) error {
 		//发送请求
-		var resp httpclient.Response
-		if resp, err = egoModels.AssembleRequest(ED, Req); err != nil || resp == nil {
+		var (
+			handler *egoModels.ModelHandler
+			resp    httpclient.Response
+		)
+
+		if handler, err = egoModels.GetHandler(ED, Req); err != nil || handler == nil {
 			return err
 		}
-		streamResp := resp.(models.ChatResponseStream)
+
+		if handler.AssembleFunc != nil {
+			if resp, err = handler.AssembleFunc(ED, Req); err != nil || resp == nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("模型 %s 缺少Assemble方法", *ED.Model.ModelName)
+		}
 
 		// 在收到回复消息之前，把用户的当前消息上传History
 		if err = EDService.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
@@ -144,6 +155,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 		}
 
 		go func() {
+			streamResp := resp.(models.ChatResponseStream)
 
 			var Contents []ChatStreamContentBlock
 			var Item egoclient.EgoDialogueItem

@@ -29,17 +29,14 @@ func NewDeepseekService() *DeepseekService {
 }
 
 func (s *DeepseekService) initAssemblers() {
-	s.ModelAssemble = map[consts.ModelType]map[string]AssembleFunc{
+	s.ModelHandlers = map[consts.ModelType]map[string]*ModelHandler{
 		consts.ChatModel: {
-			"any": s.DeepSeekReasonerAssemble,
+			"any": &ModelHandler{s.DeepSeekReasonerAssemble, nil},
 		},
 	}
 }
 
 func (s *DeepseekService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
-	if modals == nil {
-		return nil, errors.New("错误的请求格式")
-	}
 	userMsg := &models.UserMessage{
 		Content: Text,
 	}

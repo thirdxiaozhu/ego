@@ -31,10 +31,10 @@ func NewAliBLService() *AliBLService {
 }
 
 func (s *AliBLService) initAssemblers() {
-	s.ModelAssemble = map[consts.ModelType]map[string]AssembleFunc{
+	s.ModelHandlers = map[consts.ModelType]map[string]*ModelHandler{
 		consts.ChatModel: {
-			consts.AliBLQwqPlus: s.AliBLQwqPlusAssemble,
-			consts.AliBLQvqMax:  s.AliBLQwqPlusAssemble,
+			consts.AliBLQwqPlus: &ModelHandler{s.AliBLAssemble, nil},
+			consts.AliBLQvqMax:  &ModelHandler{s.AliBLAssemble, nil},
 		},
 	}
 }
@@ -49,9 +49,6 @@ func CheckModalValid(modelName string, toMatch ...string) bool {
 }
 
 func (s *AliBLService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
-	if modals == nil {
-		return nil, errors.New("错误的请求格式")
-	}
 	userMsg := &models.UserMessage{}
 
 	if len(modals) == 0 {
@@ -89,8 +86,10 @@ func (s *AliBLService) ParseChatModal(ModelName string, Text string, modals []eg
 	return userMsg, nil
 }
 
-func (s *AliBLService) AliBLQwqPlusAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
-
+func (s *AliBLService) AliBLAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+	if Req.ChatOption == nil {
+		return nil, errors.New("错误的请求格式")
+	}
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
 	chatReq := models.ChatRequest{
 		Provider: ED.Model.ModelProvider,

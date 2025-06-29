@@ -10,27 +10,33 @@ import (
 )
 
 type Service interface {
-	AssembleRequest(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error)
+	GetModelHandler(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (*ModelHandler, error)
 	ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error)
 }
 
 type AssembleFunc func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error)
+type HandleFunc func(*httpclient.Response) error
 
-type BasicService struct {
-	ModelAssemble map[consts.ModelType]map[string]AssembleFunc
+type ModelHandler struct {
+	AssembleFunc AssembleFunc
+	HandleFunc   HandleFunc
 }
 
-func (s *BasicService) AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
-	var modelType map[string]AssembleFunc
+type BasicService struct {
+	ModelHandlers map[consts.ModelType]map[string]*ModelHandler
+}
+
+func (s *BasicService) GetModelHandler(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (*ModelHandler, error) {
+	var modelType map[string]*ModelHandler
 	var exists bool
-	var fn AssembleFunc
-	if modelType, exists = s.ModelAssemble[ED.Model.ModelType]; !exists {
+	var handler *ModelHandler
+	if modelType, exists = s.ModelHandlers[ED.Model.ModelType]; !exists {
 		return nil, errors.New("model type not exists")
 	}
-	if fn, exists = modelType[*ED.Model.ModelName]; !exists || fn == nil {
+	if handler, exists = modelType[*ED.Model.ModelName]; !exists || handler == nil {
 		return nil, errors.New("assemble Function not exists")
 	}
-	return fn(ED, Req)
+	return handler, nil
 }
 
 var serviceRegistry = make(map[consts.Provider]func() Service)
@@ -46,10 +52,10 @@ func GetService(name consts.Provider) (Service, bool) {
 	return nil, false
 }
 
-func AssembleRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+func GetHandler(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (*ModelHandler, error) {
 	service, ok := GetService(ED.Model.ModelProvider)
 	if !ok {
 		return nil, errors.New("service not found")
 	}
-	return service.AssembleRequest(ED, Req)
+	return service.GetModelHandler(ED, Req)
 }
