@@ -33,8 +33,8 @@ func NewAliBLService() *AliBLService {
 func (s *AliBLService) initAssemblers() {
 	s.ModelHandlers = map[consts.ModelType]map[string]*ModelHandler{
 		consts.ChatModel: {
-			consts.AliBLQwqPlus: &ModelHandler{s.AliBLAssemble, nil},
-			consts.AliBLQvqMax:  &ModelHandler{s.AliBLAssemble, nil},
+			consts.AliBLQwqPlus: &ModelHandler{s.AliBLAssemble, DefaultChatHandler},
+			consts.AliBLQvqMax:  &ModelHandler{s.AliBLAssemble, DefaultChatHandler},
 		},
 	}
 }

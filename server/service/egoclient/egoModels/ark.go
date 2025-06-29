@@ -31,7 +31,7 @@ func NewArkService() *ArkService {
 func (s *ArkService) initAssemblers() {
 	s.ModelHandlers = map[consts.ModelType]map[string]*ModelHandler{
 		consts.ChatModel: {
-			consts.Doubaoseed1_6: &ModelHandler{s.DoubaoSeedAssemble, nil},
+			consts.Doubaoseed1_6: &ModelHandler{s.DoubaoSeedAssemble, DefaultChatHandler},
 		},
 		consts.ImageModel: {
 			consts.Doubaoseedream3: &ModelHandler{s.DoubaoSeedReamAssemble, nil},

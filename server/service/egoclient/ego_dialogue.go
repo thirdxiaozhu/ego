@@ -1,7 +1,6 @@
 package egoclient
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -10,10 +9,7 @@ import (
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/egoclient/egoModels"
 	"github.com/google/uuid"
-	"github.com/liusuxian/go-aisdk"
 	"github.com/liusuxian/go-aisdk/httpclient"
-	"github.com/liusuxian/go-aisdk/models"
-	"log"
 	"strconv"
 )
 
@@ -107,13 +103,6 @@ func (EDService *EgoDialogueService) GetEgoDialoguePublic(ctx context.Context) {
 	// 请自行实现
 }
 
-type ChatStreamContentBlock struct {
-	ContentID         string
-	SystemFingerprint string
-	ContentBuffer     bytes.Buffer
-	ReasoningBuffer   bytes.Buffer
-}
-
 // PostEgoDialogueUserMsg 创建Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context, Req *egoclientReq.EgoDialoguePostUserMsg) error {
@@ -130,12 +119,12 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 			resp    httpclient.Response
 		)
 
-		if handler, err = egoModels.GetHandler(ED, Req); err != nil || handler == nil {
+		if handler, err = egoModels.GetHandler(ED); err != nil || handler == nil {
 			return err
 		}
 
-		if handler.AssembleFunc != nil {
-			if resp, err = handler.AssembleFunc(ED, Req); err != nil || resp == nil {
+		if handler.AssembleRqstFunc != nil {
+			if resp, err = handler.AssembleRqstFunc(ED, Req); err != nil || resp == nil {
 				return err
 			}
 		} else {
@@ -143,7 +132,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 		}
 
 		// 在收到回复消息之前，把用户的当前消息上传History
-		if err = EDService.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
+		if err = egoModels.ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
 			Role:             egoclient.UserRole,
 			Item:             "",
 			IsChoice:         true,
@@ -155,60 +144,10 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 		}
 
 		go func() {
-			streamResp := resp.(models.ChatResponseStream)
-
-			var Contents []ChatStreamContentBlock
-			var Item egoclient.EgoDialogueItem
-
-			for {
-				var (
-					item       models.ChatBaseResponse
-					isFinished bool
-				)
-				if item, isFinished, err = streamResp.StreamReader.Recv(); err != nil {
-					log.Printf("createChatCompletionStream error = %v, request_id = %s", err, aisdk.RequestID(err))
-					break
-				}
-				if isFinished {
-					//把choices里的内容逐条插入history库里
-					for _, v := range Contents {
-						history := egoclient.EgoDialogueHistory{
-							Role:             egoclient.AssistantRole,
-							Item:             Item.UUID,
-							DialogueID:       ED.ID,
-							ReasoningContent: v.ReasoningBuffer.String(),
-							Content:          v.ContentBuffer.String(),
-							IsChoice:         true,
-						}
-
-						if err = EDService.CreateEgoDialogueHistory(ctx, &history); err != nil {
-							return
-						}
-					}
-					break
-				}
-				log.Printf("createChatCompletionStream item = %+v", item)
-
-				//TODO: 在这里做返回前端的SSE
-				for _, v := range item.Choices {
-					for v.Index >= len(Contents) {
-						Contents = append(Contents, ChatStreamContentBlock{})
-					}
-					Contents[v.Index].ContentID = item.ID
-					Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
-					Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
-				}
-				if item.Usage != nil && item.StreamStats != nil {
-					//存储token用量
-					Item.UUID = item.ID
-					Item.PromptTokens = item.Usage.PromptTokens
-					Item.DialogueID = ED.ID
-					Item.CompletionTokens = item.Usage.CompletionTokens
-					if err = EDService.CreateEgoDialogueItem(ctx, &Item); err != nil {
-						return
-					}
-					log.Printf("createChatCompletionStream usage = %+v", item.Usage)
-					log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
+			if handler.HandleRespFunc != nil {
+				err = handler.HandleRespFunc(ctx, ED, resp)
+				if err != nil {
+					return
 				}
 			}
 		}()
@@ -217,18 +156,4 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 	})
 	return err
 
-}
-
-// CreateEgoDialogueHistory 创建Ego对话历史记录
-// Author [yourname](https://github.com/yourname)
-func (EDService *EgoDialogueService) CreateEgoDialogueHistory(ctx context.Context, EDH *egoclient.EgoDialogueHistory) (err error) {
-	err = global.GVA_DB.Create(EDH).Error
-	return err
-}
-
-// CreateEgoDialogueItem 创建Ego对话历史记录
-// Author [yourname](https://github.com/yourname)
-func (EDService *EgoDialogueService) CreateEgoDialogueItem(ctx context.Context, EDI *egoclient.EgoDialogueItem) (err error) {
-	err = global.GVA_DB.Create(EDI).Error
-	return err
 }

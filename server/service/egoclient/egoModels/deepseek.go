@@ -31,7 +31,7 @@ func NewDeepseekService() *DeepseekService {
 func (s *DeepseekService) initAssemblers() {
 	s.ModelHandlers = map[consts.ModelType]map[string]*ModelHandler{
 		consts.ChatModel: {
-			"any": &ModelHandler{s.DeepSeekReasonerAssemble, nil},
+			"any": &ModelHandler{s.DeepSeekReasonerAssemble, DefaultChatHandler},
 		},
 	}
 }
