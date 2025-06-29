@@ -110,16 +110,14 @@ func DefaultChatHandler(ctx context.Context, ED *egoclient.EgoDialogue, resp htt
 		if isFinished {
 			//把choices里的内容逐条插入history库里
 			for _, v := range Contents {
-				history := egoclient.EgoDialogueHistory{
+				if err = ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
 					Role:             egoclient.AssistantRole,
 					Item:             Item.UUID,
 					DialogueID:       ED.ID,
 					ReasoningContent: v.ReasoningBuffer.String(),
 					Content:          v.ContentBuffer.String(),
 					IsChoice:         true,
-				}
-
-				if err = ModelSer.CreateEgoDialogueHistory(ctx, &history); err != nil {
+				}); err != nil {
 					return
 				}
 			}

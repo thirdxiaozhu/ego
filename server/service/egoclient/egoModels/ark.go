@@ -34,7 +34,7 @@ func (s *ArkService) initAssemblers() {
 			consts.Doubaoseed1_6: &ModelHandler{s.DoubaoSeedAssemble, DefaultChatHandler},
 		},
 		consts.ImageModel: {
-			consts.Doubaoseedream3: &ModelHandler{s.DoubaoSeedReamAssemble, nil},
+			consts.Doubaoseedream3: &ModelHandler{s.DoubaoSeedReamAssemble, s.DoubaoSeedReamHandler},
 		},
 	}
 }
@@ -132,4 +132,31 @@ func (s *ArkService) DoubaoSeedReamAssemble(ED *egoclient.EgoDialogue, Req *egoc
 		return nil, err
 	}
 	return &imgResp, nil
+}
+
+func (s *ArkService) DoubaoSeedReamHandler(ctx context.Context, ED *egoclient.EgoDialogue, resp httpclient.Response) (err error) {
+	imageResp := resp.(*models.ImageResponse)
+
+	//存储token
+	if err = ModelSer.CreateEgoDialogueItem(ctx, &egoclient.EgoDialogueItem{
+		UUID:             ED.UUID.String(), //图片这里用对话的UUID代替
+		DialogueID:       ED.ID,
+		CompletionTokens: imageResp.Usage.OutputTokens,
+		PromptTokens:     0,
+	}); err != nil {
+		return
+	}
+
+	for _, v := range imageResp.Data {
+		if err = ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
+			Role:       egoclient.AssistantRole,
+			Item:       ED.UUID.String(), // 与token处一致
+			DialogueID: ED.ID,
+			Content:    v.URL, //未来按需更改为B64
+			IsChoice:   true,
+		}); err != nil {
+			return
+		}
+	}
+	return nil
 }
