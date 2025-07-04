@@ -30,7 +30,7 @@ func (ECUService *EgoClientUserService) CreateEgoClientUser(ctx context.Context,
 
 	ECU.VipStatus = egoclient.EgoVipStatus{
 		ActivatedAt: time.Now(),
-		VipLevelID:  1,
+		Points:      0,
 	}
 
 	err = global.GVA_DB.Create(ECU).Error
@@ -160,11 +160,4 @@ func (ECUService *EgoClientUserService) Logout(ctx context.Context) (err error) 
 	// 请在这里实现自己的业务逻辑
 	db := global.GVA_DB.Model(&egoclient.EgoClientUser{})
 	return db.Error
-}
-
-// GetEgoClientUser 根据ID获取EGO用户记录
-// Author [yourname](https://github.com/yourname)
-func (ECUService *EgoClientUserService) GetEgoVipLevels() (ECVL []egoclient.EgoVipLevel, err error) {
-	err = global.GVA_DB.Model(&egoclient.EgoVipLevel{}).Find(&ECVL).Error
-	return
 }

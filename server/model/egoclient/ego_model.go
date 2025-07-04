@@ -4,7 +4,6 @@ package egoclient
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/liusuxian/go-aisdk/consts"
-	"time"
 )
 
 // 模型 结构体  EgoModel
@@ -28,12 +27,13 @@ type EgoModelLimit struct {
 	VipLevelID uint `json:"levelID" gorm:"primaryKey"`
 	CallLimits int  `json:"callLimits" form:"callLimits" gorm:"column:call_limits;"`
 }
-type EgoModelRecord struct {
-	//ID        uint      `gorm:"primarykey" json:"ID"` // 主键ID
-	UserID    uint      `json:"userID" gorm:"primaryKey"`
-	ModelID   uint      `json:"modelID" gorm:"primaryKey"`
-	Date      time.Time `gorm:"type:date;primaryKey"` // 只存储日期部分
-	CallTimes uint      `json:"callTimes" form:"callTimes" gorm:"column:call_times;"`
 
-	Model EgoModel `json:"model" form:"model" gorm:"foreignKey: ModelID;"`
-}
+//type EgoModelRecord struct {
+//	//ID        uint      `gorm:"primarykey" json:"ID"` // 主键ID
+//	UserID    uint      `json:"userID" gorm:"primaryKey"`
+//	ModelID   uint      `json:"modelID" gorm:"primaryKey"`
+//	Date      time.Time `gorm:"type:date;primaryKey"` // 只存储日期部分
+//	CallTimes uint      `json:"callTimes" form:"callTimes" gorm:"column:call_times;"`
+//
+//	Model EgoModel `json:"model" form:"model" gorm:"foreignKey: ModelID;"`
+//}

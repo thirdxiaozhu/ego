@@ -6,10 +6,12 @@ type RouterGroup struct {
 	EgoClientUserRouter
 	EgoDialogueRouter
 	EgoModelRouter
+	EgoNewsRouter
 }
 
 var (
 	ECUApi    = api.ApiGroupApp.EgoclientApiGroup.EgoClientUserApi
 	EDApi     = api.ApiGroupApp.EgoclientApiGroup.EgoDialogueApi
 	eModelApi = api.ApiGroupApp.EgoclientApiGroup.EgoModelApi
+	ENApi     = api.ApiGroupApp.EgoclientApiGroup.EgoNewsApi
 )

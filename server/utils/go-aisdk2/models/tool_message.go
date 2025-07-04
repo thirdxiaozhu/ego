@@ -1,0 +1,35 @@
+/*
+ * @Author: liusuxian 382185882@qq.com
+ * @Date: 2025-04-15 18:42:36
+ * @LastEditors: liusuxian 382185882@qq.com
+ * @LastEditTime: 2025-06-26 17:43:52
+ * @Description:
+ *
+ * Copyright (c) 2025 by liusuxian email: 382185882@qq.com, All Rights Reserved.
+ */
+package models
+
+// ToolMessage 工具消息
+type ToolMessage struct {
+	// 用于序列化参数时，处理差异化参数
+	provider string
+	// 文本内容
+	// 提供商支持: OpenAI | DeepSeek | AliBL | Ark
+	Content string `json:"content,omitempty" providers:"openai,deepseek,alibl,ark"`
+	// 消息角色
+	// 提供商支持: OpenAI | DeepSeek | AliBL | Ark
+	Role string `json:"role,omitempty" providers:"openai,deepseek,alibl,ark" default:"tool"`
+	// 工具调用ID
+	// 提供商支持: OpenAI | DeepSeek | AliBL | Ark
+	ToolCallID string `json:"tool_call_id,omitempty" providers:"openai,deepseek,alibl,ark"`
+}
+
+// SetProvider 设置提供商
+func (m *ToolMessage) SetProvider(provider string) {
+	m.provider = provider
+}
+
+// MarshalJSON 序列化JSON
+func (m ToolMessage) MarshalJSON() (b []byte, err error) {
+	return NewSerializer(m.provider).Serialize(m)
+}

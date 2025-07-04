@@ -50,27 +50,28 @@ func (s *EgoClientUser) GetUserInfo() any {
 
 type EgoVipStatus struct {
 	global.GVA_MODEL
-	UserID      uint        `json:"userID" gorm:"column:user_id;uniqueIndex"` // 一对一关系
-	ActivatedAt time.Time   // VIP激活时间
-	ExpiresAt   *time.Time  // VIP过期时间
-	VipLevelID  uint        `json:"vipLevelID" gorm:"column:vip_level_id;default:1"` // 外键指向vip_levels表
-	VipLevel    EgoVipLevel `json:"vipLevel" gorm:"foreignKey:VipLevelID"`           // 关联VIP等级
+	UserID      uint       `json:"userID" gorm:"column:user_id;uniqueIndex"` // 一对一关系
+	ActivatedAt time.Time  // VIP激活时间
+	ExpiresAt   *time.Time // VIP过期时间
+	//VipLevelID  uint        `json:"vipLevelID" gorm:"column:vip_level_id;default:1"` // 外键指向vip_levels表
+	//VipLevel    EgoVipLevel `json:"vipLevel" gorm:"foreignKey:VipLevelID"`           // 关联VIP等级
+	Points int64 `json:"points" gorm:"column:points;default:0"`
 }
 
 func (EgoVipStatus) TableName() string {
 	return "ego_vip_status"
 }
 
-// EgoVipLevel VIP等级配置表 (可扩展的核心表)
-type EgoVipLevel struct {
-	global.GVA_MODEL
-	Name        string          `json:"name" gorm:"column:name;size:50;uniqueIndex"`      // 等级名称 (如: VIP1, VIP2)
-	Level       int             `json:"level" gorm:"column:level;uniqueIndex"`            // 等级数值 (1,2,3...)
-	Description string          `json:"description" gorm:"column:description;size:255"`   // 等级描述
-	IsDefault   bool            `json:"isDefault" gorm:"column:is_default;default:false"` // 是否默认等级
-	Limits      []EgoModelLimit `json:"limits" form:"limits" gorm:"foreignKey: VipLevelID;"`
-}
-
-func (EgoVipLevel) TableName() string {
-	return "ego_vip_level"
-}
+//// EgoVipLevel VIP等级配置表 (可扩展的核心表)
+//type EgoVipLevel struct {
+//	global.GVA_MODEL
+//	Name        string          `json:"name" gorm:"column:name;size:50;uniqueIndex"`      // 等级名称 (如: VIP1, VIP2)
+//	Level       int             `json:"level" gorm:"column:level;uniqueIndex"`            // 等级数值 (1,2,3...)
+//	Description string          `json:"description" gorm:"column:description;size:255"`   // 等级描述
+//	IsDefault   bool            `json:"isDefault" gorm:"column:is_default;default:false"` // 是否默认等级
+//	Limits      []EgoModelLimit `json:"limits" form:"limits" gorm:"foreignKey: VipLevelID;"`
+//}
+//
+//func (EgoVipLevel) TableName() string {
+//	return "ego_vip_level"
+//}

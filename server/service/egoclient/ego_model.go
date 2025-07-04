@@ -2,13 +2,11 @@ package egoclient
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"gorm.io/gorm"
-	"time"
 )
 
 type EgoModelService struct{}
@@ -138,53 +136,53 @@ func (eModelService *EgoModelService) GetEgoModelInfoAll(ctx context.Context) (l
 	return
 }
 
-func (eModelService *EgoModelService) GetCallRecord(EMRS egoclient.EgoModelRecord) (record egoclient.EgoModelRecord, err error) {
-	err = global.GVA_DB.Where(EMRS).Attrs(egoclient.EgoModelRecord{CallTimes: 0}).FirstOrCreate(&record).Error
-	return
-}
-
-func (eModelService *EgoModelService) SetCallRecord(EMRS egoclient.EgoModelRecord) (err error) {
-	err = global.GVA_DB.Updates(&EMRS).Error
-	return
-}
+//func (eModelService *EgoModelService) GetCallRecord(EMRS egoclient.EgoModelRecord) (record egoclient.EgoModelRecord, err error) {
+//	err = global.GVA_DB.Where(EMRS).Attrs(egoclient.EgoModelRecord{CallTimes: 0}).FirstOrCreate(&record).Error
+//	return
+//}
+//
+//func (eModelService *EgoModelService) SetCallRecord(EMRS egoclient.EgoModelRecord) (err error) {
+//	err = global.GVA_DB.Updates(&EMRS).Error
+//	return
+//}
 
 type ModelOperation func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) error
 
 func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg, operation ModelOperation) (err error) {
 
 	//当前是北京时间，如果未来要改成UTC时间，改为 time.Now().UTC()（国际化）
-	now := time.Now()
-	currDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	//now := time.Now()
+	//currDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 
-	record := egoclient.EgoModelRecord{
-		UserID:  ED.User.ID,
-		ModelID: ED.Model.ID,
-		Date:    currDate,
-	}
-	record, err = eModelService.GetCallRecord(record)
-
-	limits := 0
-	for _, item := range ED.Model.Limits {
-		if item.VipLevelID == ED.User.VipStatus.VipLevelID {
-			limits = item.CallLimits
-			break
-		}
-	}
-	if limits == 0 {
-		return errors.New("模型不可用")
-	}
-
-	if limits != -1 && record.CallTimes >= uint(limits) {
-		return errors.New("当日用量已达上限")
-	}
+	//record := egoclient.EgoModelRecord{
+	//	UserID:  ED.User.ID,
+	//	ModelID: ED.Model.ID,
+	//	Date:    currDate,
+	//}
+	//record, err = eModelService.GetCallRecord(record)
+	//
+	//limits := 0
+	//for _, item := range ED.Model.Limits {
+	//	if item.VipLevelID == ED.User.VipStatus.VipLevelID {
+	//		limits = item.CallLimits
+	//		break
+	//	}
+	//}
+	//if limits == 0 {
+	//	return errors.New("模型不可用")
+	//}
+	//
+	//if limits != -1 && record.CallTimes >= uint(limits) {
+	//	return errors.New("当日用量已达上限")
+	//}
 
 	err = operation(ED, Req)
 	if err != nil {
 		return err
 	}
 
-	//更新CallTimes+1
-	record.CallTimes++
-	err = eModelService.SetCallRecord(record)
+	////更新CallTimes+1
+	//record.CallTimes++
+	//err = eModelService.SetCallRecord(record)
 	return nil
 }
