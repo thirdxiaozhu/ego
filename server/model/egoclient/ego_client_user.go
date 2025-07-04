@@ -13,16 +13,15 @@ var _ system.Login = (*EgoClientUser)(nil)
 // EGO用户 结构体  EgoClientUser
 type EgoClientUser struct {
 	global.GVA_MODEL
-	UUID        uuid.UUID        `json:"uuid" form:"uuid" gorm:"column:uuid;" `                                                             //用户ID
-	UserID      *string          `json:"userID" form:"userID" gorm:"column:user_id;" `                                                      //用户ID
-	Password    *string          `json:"password" form:"password" gorm:"column:password;" `                                                 //密码
-	Username    *string          `json:"username" form:"username" gorm:"default:新用户;column:username;"`                                      //用户名
-	Avatar      string           `json:"avatar" form:"avatar" gorm:"column:avatar;"`                                                        //头像
-	Gender      *string          `json:"gender" form:"gender" gorm:"column:gender;"`                                                        //性别
-	Description *string          `json:"description" form:"description" gorm:"column:description;type:text;"`                               //用户简介
-	AuthorityId uint             `json:"authorityId" gorm:"default:999;comment:用户角色ID"`                                                     // 用户角色ID
-	VipStatus   EgoVipStatus     `json:"vipStatus" form:"vipStatus" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;"` //VIP状态
-	CallRecord  []EgoModelRecord `json:"record" form:"record" gorm:"foreignKey: UserID;"`                                                   //模型调用次数
+	UUID        uuid.UUID    `json:"uuid" form:"uuid" gorm:"column:uuid;" `                                                             //用户ID
+	UserID      *string      `json:"userID" form:"userID" gorm:"column:user_id;" `                                                      //用户ID
+	Password    *string      `json:"password" form:"password" gorm:"column:password;" `                                                 //密码
+	Username    *string      `json:"username" form:"username" gorm:"default:新用户;column:username;"`                                      //用户名
+	Avatar      string       `json:"avatar" form:"avatar" gorm:"column:avatar;"`                                                        //头像
+	Gender      *string      `json:"gender" form:"gender" gorm:"column:gender;"`                                                        //性别
+	Description *string      `json:"description" form:"description" gorm:"column:description;type:text;"`                               //用户简介
+	AuthorityId uint         `json:"authorityId" gorm:"default:999;comment:用户角色ID"`                                                     // 用户角色ID
+	VipStatus   EgoVipStatus `json:"vipStatus" form:"vipStatus" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;"` //VIP状态
 }
 
 func (s *EgoClientUser) GetUsername() string {

@@ -82,12 +82,12 @@ func (s *ArkService) DoubaoSeedAssemble(ED *egoclient.EgoDialogue, Req *egoclien
 		Provider: ED.Model.ModelProvider,
 		Model:    *ED.Model.ModelName,
 		UserInfo: models.UserInfo{
-			UserID: *ED.User.UserID,
+			User: *ED.User.UserID,
 		},
-		Stream:              true,
-		MaxCompletionTokens: 4096,
+		Stream:              models.Bool(true),
+		MaxCompletionTokens: models.Int(4096),
 		StreamOptions: &models.ChatStreamOptions{
-			IncludeUsage: true,
+			IncludeUsage: models.Bool(true),
 		},
 	}
 
@@ -122,7 +122,7 @@ func (s *ArkService) DoubaoSeedReamAssemble(ED *egoclient.EgoDialogue, Req *egoc
 		Provider: ED.Model.ModelProvider,
 		Model:    *ED.Model.ModelName,
 		UserInfo: models.UserInfo{
-			UserID: *ED.User.UserID,
+			User: *ED.User.UserID,
 		},
 		Prompt: Req.Text,
 		Size:   models.ImageSize(Req.ImageOption.Size),
@@ -149,7 +149,6 @@ func (s *ArkService) DoubaoSeedReamHandler(ctx context.Context, ED *egoclient.Eg
 
 	for _, v := range imageResp.Data {
 		if err = ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
-			Role:       egoclient.AssistantRole,
 			Item:       ED.UUID.String(), // 与token处一致
 			DialogueID: ED.ID,
 			Content:    v.URL, //未来按需更改为B64

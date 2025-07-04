@@ -61,10 +61,10 @@ func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Re
 		Provider: consts.DeepSeek,
 		Model:    model,
 		UserInfo: models.UserInfo{
-			UserID: *ED.User.UserID,
+			User: *ED.User.UserID,
 		},
-		Stream:              true,
-		MaxCompletionTokens: 4096,
+		Stream:              models.Bool(true),
+		MaxCompletionTokens: models.Int(4096),
 	}
 	//插入历史消息
 	for _, v := range ED.Histories {

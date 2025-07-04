@@ -95,13 +95,13 @@ func (s *AliBLService) AliBLAssemble(ED *egoclient.EgoDialogue, Req *egoclientRe
 		Provider: ED.Model.ModelProvider,
 		Model:    *ED.Model.ModelName,
 		UserInfo: models.UserInfo{
-			UserID: *ED.User.UserID,
+			User: *ED.User.UserID,
 		},
-		Stream:              true,
-		EnableThinking:      Req.ChatOption.Reasoning, //Qwen3 默认开启thinking
-		MaxCompletionTokens: 4096,
+		Stream:              models.Bool(true),
+		EnableThinking:      &Req.ChatOption.Reasoning, //Qwen3 默认开启thinking
+		MaxCompletionTokens: models.Int(4096),
 		StreamOptions: &models.ChatStreamOptions{
-			IncludeUsage: true,
+			IncludeUsage: models.Bool(true),
 		},
 	}
 
