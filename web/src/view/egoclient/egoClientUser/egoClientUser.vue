@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <div class="gva-search-box">
@@ -137,10 +136,8 @@
         <el-form-item label="用户名:" prop="username">
           <el-input v-model="formData.username" :clearable="true" placeholder="请输入用户名" />
         </el-form-item>
-        <el-form-item label="VIP等级" prop="vipStatus.vipLevelID">
-          <el-select v-model="formData.vipStatus.vipLevelID" placeholder="请选择VIP等级" style="width:100%" filterable :clearable="true">
-            <el-option v-for="(item,key) in vipOptions" :key="key" :label="item.label" :value="parseInt( item.value)" />
-          </el-select>
+        <el-form-item label="积分" prop="vipStatus.points">
+          <el-input v-model="formData.vipStatus.points" :clearable="true" placeholder="请输入积分" />
         </el-form-item>
         <el-form-item label="头像:" prop="avatar">
           <SelectImage
@@ -170,9 +167,8 @@
         <el-descriptions-item label="用户名">
           {{ detailFrom.username }}
         </el-descriptions-item>
-        <el-descriptions-item label="VIP等级">
-<!--          {{detailFrom.vipStatus.vipLevel.name}}-->
-          {{filterDict( detailFrom?.vipStatus?.vipLevelID.toString(), vipOptions)}}
+        <el-descriptions-item label="剩余积分">
+          {{detailFrom.vipStatus.points}}
         </el-descriptions-item>
         <el-descriptions-item label="头像">
           <el-image style="width: 50px; height: 50px" :preview-src-list="returnArrImg(detailFrom.avatar)" :src="getUrl(detailFrom.avatar)" fit="cover" />
@@ -228,7 +224,6 @@
 
   // 自动化生成的字典（可能为空）以及字段
   const genderOptions = ref([])
-  const vipOptions = ref([])
   const formData = ref({
     userID: '',
     password: '',
@@ -236,6 +231,9 @@
     avatar: "",
     gender: '',
     description: '',
+    vipStatus: {
+      points: 0
+    }
   })
 
 
@@ -320,7 +318,6 @@
   // 获取需要的字典 可能为空 按需保留
   const setOptions = async () =>{
     genderOptions.value = await getDictFunc('gender')
-    vipOptions.value = await getDictFunc('VIPLevel')
   }
 
   // 获取需要的字典 可能为空 按需保留
@@ -426,8 +423,8 @@
       avatar: "",
       gender: '',
       description: '',
-      vipStatus:{
-        vipLevelID: 0,
+      vipStatus: {
+        points: 0,
       }
     }
   }
@@ -437,6 +434,7 @@
     elFormRef.value?.validate( async (valid) => {
       if (!valid) return btnLoading.value = false
       let res
+      formData.value.vipStatus.points = parseInt(formData.value.vipStatus.points)
       switch (type.value) {
         case 'create':
           res = await createEgoClientUser(formData.value)
@@ -487,7 +485,11 @@
   // 关闭详情弹窗
   const closeDetailShow = () => {
     detailShow.value = false
-    detailFrom.value = {}
+    detailFrom.value = {
+      vipStatus: {
+        points: 0
+      }
+    }
   }
 
   const adminChangePasswordFunc = (row) => {

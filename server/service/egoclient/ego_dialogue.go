@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/egoclient/egoModels"
 	"github.com/google/uuid"
 	"github.com/liusuxian/go-aisdk/httpclient"
-	"strconv"
 )
 
 type EgoDialogueService struct{}
@@ -48,7 +49,6 @@ func (EDService *EgoDialogueService) DeleteEgoDialogueByIds(ctx context.Context,
 // UpdateEgoDialogue 更新Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) UpdateEgoDialogue(ctx context.Context, ED egoclient.EgoDialogue) (err error) {
-	fmt.Println(ED)
 	err = global.GVA_DB.Model(&egoclient.EgoDialogue{}).Where("id = ?", ED.ID).Updates(&ED).Error
 	return err
 }

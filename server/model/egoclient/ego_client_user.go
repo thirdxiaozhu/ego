@@ -2,10 +2,13 @@
 package egoclient
 
 import (
+	"encoding/json"
+	"strconv"
+	"time"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/google/uuid"
-	"time"
 )
 
 var _ system.Login = (*EgoClientUser)(nil)
@@ -55,7 +58,41 @@ type EgoVipStatus struct {
 	ExpiresAt   *time.Time // VIP过期时间
 	//VipLevelID  uint        `json:"vipLevelID" gorm:"column:vip_level_id;default:1"` // 外键指向vip_levels表
 	//VipLevel    EgoVipLevel `json:"vipLevel" gorm:"foreignKey:VipLevelID"`           // 关联VIP等级
-	Points int64 `json:"points" gorm:"column:points;default:0"`
+	Points int `json:"points" gorm:"column:points;default:0"`
+}
+
+// UnmarshalJSON 自定义反序列化方法，处理字符串到整数的转换
+func (v *EgoVipStatus) UnmarshalJSON(data []byte) error {
+	type Alias EgoVipStatus
+	aux := &struct {
+		Points interface{} `json:"points"`
+		*Alias
+	}{
+		Alias: (*Alias)(v),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	// 处理 Points 字段的类型转换
+	switch val := aux.Points.(type) {
+	case float64:
+		v.Points = int(val)
+	case string:
+		if val == "" {
+			v.Points = 0
+		} else {
+			points, err := strconv.Atoi(val)
+			if err != nil {
+				return err
+			}
+			v.Points = points
+		}
+	case nil:
+		v.Points = 0
+	}
+
+	return nil
 }
 
 func (EgoVipStatus) TableName() string {

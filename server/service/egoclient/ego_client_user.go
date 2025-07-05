@@ -3,12 +3,13 @@ package egoclient
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/google/uuid"
-	"time"
 )
 
 type EgoClientUserService struct{}
@@ -72,7 +73,7 @@ func (ECUService *EgoClientUserService) UpdateEgoClientUser(ctx context.Context,
 // GetEgoClientUser 根据ID获取EGO用户记录
 // Author [yourname](https://github.com/yourname)
 func (ECUService *EgoClientUserService) GetEgoClientUser(ctx context.Context, ID string) (ECU egoclient.EgoClientUser, err error) {
-	err = global.GVA_DB.Where("id = ?", ID).Preload("VipStatus").Preload("VipStatus.VipLevel").First(&ECU).Error
+	err = global.GVA_DB.Where("id = ?", ID).Preload("VipStatus").First(&ECU).Error
 	return
 }
 
@@ -116,7 +117,7 @@ func (ECUService *EgoClientUserService) GetEgoClientUserInfoList(ctx context.Con
 func (ECUService *EgoClientUserService) GetEgoClientUserPublic(ctx context.Context) {
 	// 此方法为获取数据源定义的数据
 	// 请自行实现
-	
+
 }
 
 // AdminChangePassword 管理员修改密码
@@ -140,7 +141,7 @@ func (ECUService *EgoClientUserService) Login(ctx context.Context, UserID, passw
 	if err != nil {
 		return nil, errors.New("用户不存在")
 	}
-	if utils.BcryptCheck(*password, *user.Password) == true {
+	if utils.BcryptCheck(*password, *user.Password) {
 		return &user, nil
 	} else {
 		return nil, errors.New("密码错误")
@@ -161,4 +162,23 @@ func (ECUService *EgoClientUserService) Logout(ctx context.Context) (err error) 
 	// 请在这里实现自己的业务逻辑
 	db := global.GVA_DB.Model(&egoclient.EgoClientUser{})
 	return db.Error
+}
+
+// UpdateEgoClientUserPoints 更新用户积分
+// Author [yourname](https://github.com/yourname)
+func (ECUService *EgoClientUserService) UpdateEgoClientUserPoints(ctx context.Context, userID uint, points int) (err error) {
+	// 从数据库获取用户
+	var user egoclient.EgoClientUser
+	if err = global.GVA_DB.Where("id = ?", userID).Preload("VipStatus").First(&user).Error; err != nil {
+		return err
+	}
+
+	// 扣减积分
+	user.VipStatus.Points -= points
+
+	// 更新积分
+	err = global.GVA_DB.Model(&egoclient.EgoVipStatus{}).Where("user_id = ?", userID).
+		Update("points", user.VipStatus.Points).Error
+
+	return err
 }

@@ -2,12 +2,12 @@ package egoclient
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"time"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
-	"gorm.io/gorm"
 )
 
 type EgoModelService struct{}
@@ -37,53 +37,53 @@ func (eModelService *EgoModelService) DeleteEgoModelByIds(ctx context.Context, I
 // Author [yourname](https://github.com/yourname)
 func (eModelService *EgoModelService) UpdateEgoModel(ctx context.Context, eModel egoclient.EgoModel) (err error) {
 
-	tx := global.GVA_DB.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
+	err = global.GVA_DB.Model(&egoclient.EgoModel{}).Where("id = ?", eModel.ID).Updates(&eModel).Error
+	return err
+	// tx := global.GVA_DB.Begin()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		tx.Rollback()
+	// 	}
+	// }()
 
-	// 1. 更新主模型数据 (排除关联字段)
-	if err = tx.Model(&egoclient.EgoModel{}).Where("id = ?", eModel.ID).
-		Omit("Limits"). // 关键：排除关联字段
-		Updates(&eModel).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
+	// // 1. 更新主模型数据 (排除关联字段)
+	// if err = tx.Model(&egoclient.EgoModel{}).Where("id = ?", eModel.ID).
+	// 	Omit("Limits"). // 关键：排除关联字段
+	// 	Updates(&eModel).Error; err != nil {
+	// 	tx.Rollback()
+	// 	return err
+	// }
 
-	//2. 处理关联的Limits数据
-	if len(eModel.Limits) > 0 {
-		// 先删除所有旧关联
-		fmt.Println(eModel.ID)
-		if err = tx.Where("model_id = ?", eModel.ID).
-			Delete(&egoclient.EgoModelLimit{}).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
+	// //2. 处理关联的Limits数据
+	// if len(eModel.Limits) > 0 {
+	// 	// 先删除所有旧关联
+	// 	fmt.Println(eModel.ID)
+	// 	if err = tx.Where("model_id = ?", eModel.ID).
+	// 		Delete(&egoclient.EgoModelLimit{}).Error; err != nil {
+	// 		tx.Rollback()
+	// 		return err
+	// 	}
 
-		// 设置关联ID并创建新数据
-		for i := range eModel.Limits {
-			eModel.Limits[i].ModelID = eModel.ID
-		}
-		if err = tx.Create(&eModel.Limits).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
+	// 	// 设置关联ID并创建新数据
+	// 	for i := range eModel.Limits {
+	// 		eModel.Limits[i].ModelID = eModel.ID
+	// 	}
+	// 	if err = tx.Create(&eModel.Limits).Error; err != nil {
+	// 		tx.Rollback()
+	// 		return err
+	// 	}
+	// }
 
-	//
-	// 提交事务
-	return tx.Commit().Error
+	// //
+	// // 提交事务
+	// return tx.Commit().Error
 }
 
 // GetEgoModel 根据ID获取模型记录
 // Author [yourname](https://github.com/yourname)
 func (eModelService *EgoModelService) GetEgoModel(ctx context.Context, ID string) (eModel egoclient.EgoModel, err error) {
 	//查询 EgoModel 时需要预加载关联的 Limits 并按 VipLevelID 升序排序。以下是完整实现方案：
-	err = global.GVA_DB.Where("id = ?", ID).Preload("Limits", func(db *gorm.DB) *gorm.DB {
-		return db.Order("ego_model_limits.vip_level_id ASC")
-	}).First(&eModel).Error
+	err = global.GVA_DB.Where("id = ?", ID).First(&eModel).Error
 	return
 }
 
@@ -137,15 +137,14 @@ func (eModelService *EgoModelService) GetEgoModelInfoAll(ctx context.Context) (l
 	return
 }
 
-//func (eModelService *EgoModelService) GetCallRecord(EMRS egoclient.EgoModelRecord) (record egoclient.EgoModelRecord, err error) {
-//	err = global.GVA_DB.Where(EMRS).Attrs(egoclient.EgoModelRecord{CallTimes: 0}).FirstOrCreate(&record).Error
-//	return
-//}
-//
-//func (eModelService *EgoModelService) SetCallRecord(EMRS egoclient.EgoModelRecord) (err error) {
-//	err = global.GVA_DB.Updates(&EMRS).Error
-//	return
-//}
+//	func (eModelService *EgoModelService) GetCallRecord(EMRS egoclient.EgoModelRecord) (record egoclient.EgoModelRecord, err error) {
+//		err = global.GVA_DB.Where(EMRS).Attrs(egoclient.EgoModelRecord{CallTimes: 0}).FirstOrCreate(&record).Error
+//		return
+//	}
+func (eModelService *EgoModelService) CreateCallRecord(EMRS egoclient.EgoModelRecord) (err error) {
+	err = global.GVA_DB.Create(&EMRS).Error
+	return
+}
 
 type ModelOperation func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) error
 
@@ -154,13 +153,12 @@ func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Re
 	//当前是北京时间，如果未来要改成UTC时间，改为 time.Now().UTC()（国际化）
 	//now := time.Now()
 	//currDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-
-	//record := egoclient.EgoModelRecord{
-	//	UserID:  ED.User.ID,
-	//	ModelID: ED.Model.ID,
-	//	Date:    currDate,
-	//}
-	//record, err = eModelService.GetCallRecord(record)
+	// record := egoclient.EgoModelRecord{
+	// 	UserID:  ED.User.ID,
+	// 	ModelID: ED.Model.ID,
+	// 	Date:    currDate,
+	// }
+	// record, err = eModelService.GetCallRecord(record)
 	//
 	//limits := 0
 	//for _, item := range ED.Model.Limits {
@@ -177,13 +175,29 @@ func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Re
 	//	return errors.New("当日用量已达上限")
 	//}
 
-	err = operation(ED, Req)
-	if err != nil {
+	if ED.User.VipStatus.Points < ED.Model.NeedPoints {
+		return errors.New("积分不足")
+	}
+
+	if err = operation(ED, Req); err != nil {
+		return err
+	}
+
+	if err = eModelService.CreateCallRecord(egoclient.EgoModelRecord{
+		UserID:  ED.User.ID,
+		ModelID: ED.Model.ID,
+		Date:    time.Now(),
+	}); err != nil {
+		return err
+	}
+
+	//当前是北京时间，如果未来要改成UTC时间，改为 time.Now().UTC()（国际化）
+	ED.User.VipStatus.Points -= ED.Model.NeedPoints
+	var ecuService EgoClientUserService
+	if err = ecuService.UpdateEgoClientUser(nil, ED.User); err != nil {
 		return err
 	}
 
 	////更新CallTimes+1
-	//record.CallTimes++
-	//err = eModelService.SetCallRecord(record)
 	return nil
 }

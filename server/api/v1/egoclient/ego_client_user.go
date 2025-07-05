@@ -1,15 +1,15 @@
 package egoclient
 
 import (
+	"time"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
-	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"time"
 )
 
 type EgoClientUserApi struct{}
@@ -30,6 +30,7 @@ func (ECUApi *EgoClientUserApi) CreateEgoClientUser(c *gin.Context) {
 	var ECU egoclient.EgoClientUser
 	err := c.ShouldBindJSON(&ECU)
 	if err != nil {
+		global.GVA_LOG.Error("创建失败!", zap.Error(err))
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
@@ -152,7 +153,7 @@ func (ECUApi *EgoClientUserApi) GetEgoClientUserList(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
 
-	var pageInfo egoclientReq.EgoClientUserSearch
+	var pageInfo request.EgoClientUserSearch
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -231,7 +232,7 @@ func (ECUApi *EgoClientUserApi) Register(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
 
-	var regInfo egoclientReq.UserAction
+	var regInfo request.UserAction
 	err := c.ShouldBindJSON(&regInfo)
 
 	body, _ := c.GetRawData()
@@ -266,7 +267,7 @@ func (ECUApi *EgoClientUserApi) Register(c *gin.Context) {
 func (ECUApi *EgoClientUserApi) Login(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
-	var loginInfo egoclientReq.UserAction
+	var loginInfo request.UserAction
 	err := c.ShouldBindJSON(&loginInfo)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
