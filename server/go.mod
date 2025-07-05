@@ -54,7 +54,6 @@ require (
 )
 
 require (
-	code.sajari.com/docconv v1.3.8 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/JalfResi/justext v0.0.0-20221106200834-be571e3e3052 // indirect
@@ -195,6 +194,9 @@ require (
 	modernc.org/sqlite v1.34.5 // indirect
 )
 
-require github.com/liusuxian/go-aisdk v0.0.0
+require (
+	code.sajari.com/docconv v1.3.8
+	github.com/liusuxian/go-aisdk v0.0.0
+)
 
 replace github.com/liusuxian/go-aisdk => ./utils/go-aisdk

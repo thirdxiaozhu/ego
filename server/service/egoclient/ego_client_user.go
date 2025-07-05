@@ -116,6 +116,7 @@ func (ECUService *EgoClientUserService) GetEgoClientUserInfoList(ctx context.Con
 func (ECUService *EgoClientUserService) GetEgoClientUserPublic(ctx context.Context) {
 	// 此方法为获取数据源定义的数据
 	// 请自行实现
+	
 }
 
 // AdminChangePassword 管理员修改密码

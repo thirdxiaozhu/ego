@@ -3,6 +3,7 @@ package egoclient
 import (
 	"context"
 	"fmt"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
