@@ -8,6 +8,7 @@ import service from '@/utils/request'
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"创建成功"}"
 // @Router /ECU/createEgoClientUser [post]
 export const createEgoClientUser = (data) => {
+  console.log(data)
   return service({
     url: '/ECU/createEgoClientUser',
     method: 'post',

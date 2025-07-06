@@ -10,6 +10,7 @@ import (
 	"github.com/liusuxian/go-aisdk/consts"
 	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
+	"log"
 	"strings"
 	"time"
 )
@@ -33,8 +34,8 @@ func NewAliBLService() *AliBLService {
 func (s *AliBLService) initAssemblers() {
 	s.ModelHandlers = map[consts.ModelType]map[string]*ModelHandler{
 		consts.ChatModel: {
-			consts.AliBLQwqPlus: &ModelHandler{s.AliBLAssemble, DefaultChatHandler},
-			consts.AliBLQvqMax:  &ModelHandler{s.AliBLAssemble, DefaultChatHandler},
+			consts.AliBLQwqPlus: &ModelHandler{s.AliBLAssemble, s.AliBLChatHandler},
+			consts.AliBLQvqMax:  &ModelHandler{s.AliBLAssemble, s.AliBLChatHandler},
 		},
 	}
 }
@@ -92,17 +93,38 @@ func (s *AliBLService) AliBLAssemble(ED *egoclient.EgoDialogue, Req *egoclientRe
 	}
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
 	chatReq := models.ChatRequest{
-		Provider: ED.Model.ModelProvider,
-		Model:    *ED.Model.ModelName,
+		//UserInfo: models.UserInfo{
+		//	User: *ED.User.UserID,
+		//},
+		//Provider:            ED.Model.ModelProvider,
+		//Model:               *ED.Model.ModelName,
+		//MaxCompletionTokens: models.Int(4096),
+		//FrequencyPenalty:    models.Float32(1.0),
+		//EnableThinking:      models.Bool(Req.ChatOption.Reasoning), //Qwen3 默认开启thinking
+		//Stream:              models.Bool(true),                     // 不会被序列化，会放到请求头中
+		//StreamOptions: &models.ChatStreamOptions{
+		//	IncludeUsage: models.Bool(true),
+		//}, // 不会被序列化
 		UserInfo: models.UserInfo{
-			User: *ED.User.UserID,
+			User: "123456",
 		},
-		Stream:              models.Bool(true),
-		EnableThinking:      &Req.ChatOption.Reasoning, //Qwen3 默认开启thinking
+		Provider:            consts.AliBL,
+		Model:               consts.AliBLQwenVlMax,
+		FrequencyPenalty:    models.Float32(1.0),
 		MaxCompletionTokens: models.Int(4096),
+		// Metadata:            map[string]string{"X-DashScope-DataInspection": "{\"input\": \"cip\", \"output\": \"cip\"}"},
+		WebSearchOptions: &models.ChatWebSearchOptions{
+			EnableSource:   models.Bool(true),
+			EnableCitation: models.Bool(true),
+			CitationFormat: models.ChatCitationFormatRefNumber,
+			ForcedSearch:   models.Bool(true),
+			SearchStrategy: models.ChatSearchStrategyPro,
+		},
+		EnableThinking: models.Bool(true),
+		Stream:         models.Bool(true), // 不会被序列化，会放到请求头中
 		StreamOptions: &models.ChatStreamOptions{
 			IncludeUsage: models.Bool(true),
-		},
+		}, // 不会被序列化
 	}
 
 	//插入历史消息
@@ -119,4 +141,60 @@ func (s *AliBLService) AliBLAssemble(ED *egoclient.EgoDialogue, Req *egoclientRe
 	chatReq.Messages = append(chatReq.Messages, userMsg)
 
 	return global.AiSDK.CreateChatCompletionStream(ctx, chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
+}
+
+func (s *AliBLService) AliBLChatHandler(ctx context.Context, DialogueID uint) func(item models.ChatBaseResponse, isFinished bool) error {
+	var Contents []ChatStreamContentBlock
+	var ItemUUID string
+	var DialogueItem egoclient.EgoDialogueItem
+	return func(item models.ChatBaseResponse, isFinished bool) (err error) {
+		if isFinished {
+			// 存储历史记录
+			for _, v := range Contents {
+				if err = ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
+					Role:             egoclient.AssistantRole,
+					Item:             ItemUUID,
+					DialogueID:       DialogueID,
+					ReasoningContent: v.ReasoningBuffer.String(),
+					Content:          v.ContentBuffer.String(),
+					IsChoice:         true,
+				}); err != nil {
+					return err
+				}
+			}
+
+			// 存储token用量
+			if err = ModelSer.CreateEgoDialogueItem(ctx, &DialogueItem); err != nil {
+				return
+			}
+			return nil
+		}
+		for _, v := range item.Choices {
+			for v.Index >= len(Contents) {
+				Contents = append(Contents, ChatStreamContentBlock{})
+			}
+			Contents[v.Index].ContentID = item.ID
+			Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
+			Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
+		}
+		if item.Usage != nil && item.StreamStats != nil {
+			//更新token用量
+			DialogueItem.UUID = item.ID
+			DialogueItem.PromptTokens = item.Usage.PromptTokens
+			DialogueItem.DialogueID = DialogueID
+			DialogueItem.CompletionTokens = item.Usage.CompletionTokens
+			//ItemUUID = item.ID
+			//if err = ModelSer.CreateEgoDialogueItem(ctx, &egoclient.EgoDialogueItem{
+			//	UUID:             item.ID,
+			//	PromptTokens:     item.Usage.PromptTokens,
+			//	DialogueID:       DialogueID,
+			//	CompletionTokens: item.Usage.CompletionTokens,
+			//}); err != nil {
+			//	return
+			//}
+			log.Printf("createChatCompletionStream usage = %+v", item.Usage)
+			log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
+		}
+		return nil
+	}
 }

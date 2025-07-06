@@ -2,35 +2,34 @@
 <template>
   <div>
     <div class="gva-search-box">
-      <el-form ref="elSearchFormRef" :inline="true" :model="searchInfo" class="demo-form-inline" @keyup.enter="onSubmit">
+      <el-form ref="elSearchFormRef" :inline="true" :model="searchInfo" class="demo-form-inline"
+        @keyup.enter="onSubmit">
         <el-form-item label="创建日期" prop="createdAtRange">
           <template #label>
-        <span>
-          创建日期
-          <el-tooltip content="搜索范围是开始日期（包含）至结束日期（不包含）">
-            <el-icon><QuestionFilled /></el-icon>
-          </el-tooltip>
-        </span>
+            <span>
+              创建日期
+              <el-tooltip content="搜索范围是开始日期（包含）至结束日期（不包含）">
+                <el-icon>
+                  <QuestionFilled />
+                </el-icon>
+              </el-tooltip>
+            </span>
           </template>
 
-          <el-date-picker
-            v-model="searchInfo.createdAtRange"
-            class="w-[380px]"
-            type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-          />
+          <el-date-picker v-model="searchInfo.createdAtRange" class="w-[380px]" type="datetimerange" range-separator="至"
+            start-placeholder="开始时间" end-placeholder="结束时间" />
         </el-form-item>
 
         <el-form-item label="模型供应商" prop="modelProvider">
-          <el-select v-model="searchInfo.modelProvider" clearable filterable placeholder="请选择" @clear="()=>{searchInfo.modelProvider=undefined}">
+          <el-select v-model="searchInfo.modelProvider" clearable filterable placeholder="请选择"
+            @clear="()=>{searchInfo.modelProvider=undefined}">
             <el-option v-for="(item,key) in modelProviderOptions" :key="key" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="服务类型" prop="modelType">
-          <el-select v-model="searchInfo.modelType" clearable filterable placeholder="请选择" @clear="()=>{searchInfo.modelType=undefined}">
+          <el-select v-model="searchInfo.modelType" clearable filterable placeholder="请选择"
+            @clear="()=>{searchInfo.modelType=undefined}">
             <el-option v-for="(item,key) in modelTypeOptions" :key="key" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
@@ -47,28 +46,24 @@
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSubmit">查询</el-button>
           <el-button icon="refresh" @click="onReset">重置</el-button>
-          <el-button link type="primary" icon="arrow-down" @click="showAllQuery=true" v-if="!showAllQuery">展开</el-button>
+          <el-button link type="primary" icon="arrow-down" @click="showAllQuery=true"
+            v-if="!showAllQuery">展开</el-button>
           <el-button link type="primary" icon="arrow-up" @click="showAllQuery=false" v-else>收起</el-button>
         </el-form-item>
       </el-form>
     </div>
     <div class="gva-table-box">
       <div class="gva-btn-list">
-        <el-button  type="primary" icon="plus" @click="openDialog()">新增</el-button>
-        <el-button  icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length" @click="onDelete">删除</el-button>
+        <el-button type="primary" icon="plus" @click="openDialog()">新增</el-button>
+        <el-button icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length"
+          @click="onDelete">删除</el-button>
 
       </div>
-      <el-table
-        ref="multipleTable"
-        style="width: 100%"
-        tooltip-effect="dark"
-        :data="tableData"
-        row-key="ID"
-        @selection-change="handleSelectionChange"
-      >
+      <el-table ref="multipleTable" style="width: 100%" tooltip-effect="dark" :data="tableData" row-key="ID"
+        @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
 
-        <el-table-column sortable align="left" label="日期" prop="CreatedAt"width="180">
+        <el-table-column sortable align="left" label="日期" prop="CreatedAt" width="180">
           <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
 
@@ -86,25 +81,24 @@
 
         <el-table-column align="left" label="操作" fixed="right" :min-width="appStore.operateMinWith">
           <template #default="scope">
-            <el-button  type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
-            <el-button  type="primary" link icon="edit" class="table-button" @click="updateEgoModelFunc(scope.row)">编辑</el-button>
-            <el-button   type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
+            <el-button type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon
+                style="margin-right: 5px">
+                <InfoFilled />
+              </el-icon>查看</el-button>
+            <el-button type="primary" link icon="edit" class="table-button"
+              @click="updateEgoModelFunc(scope.row)">编辑</el-button>
+            <el-button type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
       <div class="gva-pagination">
-        <el-pagination
-          layout="total, sizes, prev, pager, next, jumper"
-          :current-page="page"
-          :page-size="pageSize"
-          :page-sizes="[10, 30, 50, 100]"
-          :total="total"
-          @current-change="handleCurrentChange"
-          @size-change="handleSizeChange"
-        />
+        <el-pagination layout="total, sizes, prev, pager, next, jumper" :current-page="page" :page-size="pageSize"
+          :page-sizes="[10, 30, 50, 100]" :total="total" @current-change="handleCurrentChange"
+          @size-change="handleSizeChange" />
       </div>
     </div>
-    <el-drawer destroy-on-close :size="appStore.drawerSize" v-model="dialogFormVisible" :show-close="false" :before-close="closeDialog">
+    <el-drawer destroy-on-close :size="appStore.drawerSize" v-model="dialogFormVisible" :show-close="false"
+      :before-close="closeDialog">
       <template #header>
         <div class="flex justify-between items-center">
           <span class="text-lg">{{type==='create'?'新增':'编辑'}}</span>
@@ -117,7 +111,8 @@
 
       <el-form :model="formData" label-position="top" ref="elFormRef" :rules="rule" label-width="80px">
         <el-form-item label="模型供应商:" prop="modelProvider">
-          <el-select v-model="formData.modelProvider" placeholder="请选择模型供应商" style="width:100%" filterable :clearable="true">
+          <el-select v-model="formData.modelProvider" placeholder="请选择模型供应商" style="width:100%" filterable
+            :clearable="true">
             <el-option v-for="(item,key) in modelProviderOptions" :key="key" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
@@ -129,17 +124,15 @@
         <el-form-item label="模型名称:" prop="modelName">
           <el-input v-model="formData.modelName" :clearable="true" placeholder="请输入模型名称" />
         </el-form-item>
-        <el-form-item
-          v-for="(item, index) in vipLevelOptions"
-          :key="index"
-          :label="item.label"
-        >
-          <el-input v-model.number="formData.limits[index].callLimits" :clearable="true" placeholder="请输入限制次数" />
+        <el-form-item label="积分需求:" prop="needPoints">
+          <el-input v-model="formData.needPoints" :clearable="true" placeholder="请输入积分需求" />
         </el-form-item>
+
       </el-form>
     </el-drawer>
 
-    <el-drawer destroy-on-close :size="appStore.drawerSize" v-model="detailShow" :show-close="true" :before-close="closeDetailShow" title="查看">
+    <el-drawer destroy-on-close :size="appStore.drawerSize" v-model="detailShow" :show-close="true"
+      :before-close="closeDetailShow" title="查看">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="模型供应商">
           {{ detailFrom.modelProvider }}
@@ -150,15 +143,9 @@
         <el-descriptions-item label="模型名称">
           {{ detailFrom.modelName }}
         </el-descriptions-item>
-        <template>
-          <el-descriptions-item
-          v-for="(item, index) in detailFrom.limits"
-            :key="index"
-            :label="filterDict(item.levelID.toString(), vipLevelOptions)"
-          >
-            {{ item.callLimits }}
-          </el-descriptions-item>
-        </template>
+        <el-descriptions-item label="积分要求">
+          {{ detailFrom.needPoints }}
+        </el-descriptions-item>
       </el-descriptions>
     </el-drawer>
 
@@ -195,7 +182,6 @@
   // 自动化生成的字典（可能为空）以及字段
   const modelProviderOptions = ref([])
   const modelTypeOptions = ref([])
-  const vipLevelOptions = ref([])
   const formData = ref({
   })
 
@@ -205,7 +191,6 @@
   const setOptions = async () =>{
     modelProviderOptions.value = await getDictFunc('model-provider')
     modelTypeOptions.value = await getDictFunc('model-type')
-    vipLevelOptions.value = await getDictFunc('VIPLevel')
   }
 
   // 获取需要的字典 可能为空 按需保留
@@ -216,19 +201,8 @@
       modelProvider: '',
       modelType: '',
       modelName: '',
-      normalTimes : 0,
-      vipTimes : 0,
-      limits: [],
+      needPoints: 0,
     }
-
-    vipLevelOptions.value.forEach((item, index) => {
-      formData.value.limits.push({
-        levelID: parseInt(item.value),
-        callLimits: 0,
-      })
-
-    })
-    console.log(formData.value)
   }
 
 
@@ -251,15 +225,6 @@
     searchInfo.value = {}
     getTableData()
   }
-
-  const getLimits = computed( (vipLevelID, items) => {
-    for (let index in items){
-      if(items[index].levelID === vipLevelID){
-        return items[index].callLimits
-      }
-    }
-    return null
-  })
 
   // 搜索
   const onSubmit = () => {
@@ -359,17 +324,6 @@
     if (res.code === 0) {
       formData.value = res.data
 
-      vipLevelOptions.value.forEach((item, index) => {
-        if(index < formData.value.limits.length) {
-          return
-        }
-        formData.value.limits.push({
-          levelID: parseInt(item.value),
-          callLimits: 0,
-        })
-
-      })
-      console.log(formData.value.limits[0].callLimits)
       dialogFormVisible.value = true
     }
   }
@@ -411,6 +365,7 @@
     elFormRef.value?.validate( async (valid) => {
       if (!valid) return btnLoading.value = false
       let res
+      formData.value.needPoints = parseInt(formData.value.needPoints)
       switch (type.value) {
         case 'create':
           res = await createEgoModel(formData.value)

@@ -2,8 +2,6 @@
 package egoclient
 
 import (
-	"time"
-
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/liusuxian/go-aisdk/consts"
 )
@@ -32,10 +30,9 @@ func (EgoModel) TableName() string {
 
 type EgoModelRecord struct {
 	//ID        uint      `gorm:"primarykey" json:"ID"` // 主键ID
-	UserID    uint      `json:"userID" gorm:"primaryKey"`
-	ModelID   uint      `json:"modelID" gorm:"primaryKey"`
-	Date      time.Time `json:"date" gorm:"type:date"` // 只存储日期部分
-	UsePoints int       `json:"usePoints" form:"usePoints" gorm:"column:use_points;"`
-
-	Model EgoModel `json:"model" form:"model" gorm:"foreignKey: ModelID;"`
+	global.GVA_MODEL
+	UserID    uint     `json:"userID" gorm:"column:user_id"`
+	ModelID   uint     `json:"modelID" gorm:"column:model_id"`
+	UsePoints int      `json:"usePoints" form:"usePoints" gorm:"column:use_points;"`
+	Model     EgoModel `json:"model" form:"model" gorm:"foreignKey: ModelID;"`
 }

@@ -7,11 +7,9 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
-	"github.com/liusuxian/go-aisdk"
 	"github.com/liusuxian/go-aisdk/consts"
 	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
-	"log"
 )
 
 type ModelService struct {
@@ -56,7 +54,7 @@ func GetHandler(ED *egoclient.EgoDialogue) (*ModelHandler, error) {
 
 type AssembleRequest func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error)
 
-type HandleResponse func(ctx context.Context, ED *egoclient.EgoDialogue, resp httpclient.Response) error
+type HandleResponse func(ctx context.Context, DialogueID uint) func(item models.ChatBaseResponse, isFinished bool) error
 
 type ModelHandler struct {
 	AssembleRqstFunc AssembleRequest
@@ -90,62 +88,4 @@ type ChatStreamContentBlock struct {
 	SystemFingerprint string
 	ContentBuffer     bytes.Buffer
 	ReasoningBuffer   bytes.Buffer
-}
-
-func DefaultChatHandler(ctx context.Context, ED *egoclient.EgoDialogue, resp httpclient.Response) (err error) {
-	streamResp := resp.(models.ChatResponseStream)
-
-	var Contents []ChatStreamContentBlock
-	var Item egoclient.EgoDialogueItem
-
-	for {
-		var (
-			item       models.ChatBaseResponse
-			isFinished bool
-		)
-		if item, isFinished, err = streamResp.StreamReader.Recv(); err != nil {
-			log.Printf("createChatCompletionStream error = %v, request_id = %s", err, aisdk.RequestID(err))
-			break
-		}
-		if isFinished {
-			//把choices里的内容逐条插入history库里
-			for _, v := range Contents {
-				if err = ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
-					Role:             egoclient.AssistantRole,
-					Item:             Item.UUID,
-					DialogueID:       ED.ID,
-					ReasoningContent: v.ReasoningBuffer.String(),
-					Content:          v.ContentBuffer.String(),
-					IsChoice:         true,
-				}); err != nil {
-					return
-				}
-			}
-			break
-		}
-		log.Printf("createChatCompletionStream item = %+v", item)
-
-		//TODO: 在这里做返回前端的SSE
-		for _, v := range item.Choices {
-			for v.Index >= len(Contents) {
-				Contents = append(Contents, ChatStreamContentBlock{})
-			}
-			Contents[v.Index].ContentID = item.ID
-			Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
-			Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
-		}
-		if item.Usage != nil && item.StreamStats != nil {
-			//存储token用量
-			Item.UUID = item.ID
-			Item.PromptTokens = item.Usage.PromptTokens
-			Item.DialogueID = ED.ID
-			Item.CompletionTokens = item.Usage.CompletionTokens
-			if err = ModelSer.CreateEgoDialogueItem(ctx, &Item); err != nil {
-				return
-			}
-			log.Printf("createChatCompletionStream usage = %+v", item.Usage)
-			log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
-		}
-	}
-	return nil
 }

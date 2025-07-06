@@ -3,8 +3,6 @@ package egoclient
 import (
 	"context"
 	"errors"
-	"time"
-
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
@@ -184,9 +182,9 @@ func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Re
 	}
 
 	if err = eModelService.CreateCallRecord(egoclient.EgoModelRecord{
-		UserID:  ED.User.ID,
-		ModelID: ED.Model.ID,
-		Date:    time.Now(),
+		UserID:    ED.User.ID,
+		ModelID:   ED.Model.ID,
+		UsePoints: ED.Model.NeedPoints,
 	}); err != nil {
 		return err
 	}

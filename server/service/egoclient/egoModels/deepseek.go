@@ -9,6 +9,7 @@ import (
 	"github.com/liusuxian/go-aisdk/consts"
 	httpclient "github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
+	"log"
 	"time"
 )
 
@@ -31,7 +32,7 @@ func NewDeepseekService() *DeepseekService {
 func (s *DeepseekService) initAssemblers() {
 	s.ModelHandlers = map[consts.ModelType]map[string]*ModelHandler{
 		consts.ChatModel: {
-			"any": &ModelHandler{s.DeepSeekReasonerAssemble, DefaultChatHandler},
+			"any": &ModelHandler{s.DeepSeekReasonerAssemble, nil},
 		},
 	}
 }
@@ -80,4 +81,47 @@ func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Re
 	chatReq.Messages = append(chatReq.Messages, userMsg)
 
 	return global.AiSDK.CreateChatCompletionStream(ctx, chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
+}
+
+func (s *DeepseekService) DeepSeekChatHandler(ctx context.Context, DialogueID uint, Contents *[]ChatStreamContentBlock, ItemUUID *string) func(item models.ChatBaseResponse, isFinished bool) error {
+	return func(item models.ChatBaseResponse, isFinished bool) (err error) {
+		if isFinished {
+			for _, v := range *Contents {
+				if err = ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
+					Role:             egoclient.AssistantRole,
+					Item:             *ItemUUID,
+					DialogueID:       DialogueID,
+					ReasoningContent: v.ReasoningBuffer.String(),
+					Content:          v.ContentBuffer.String(),
+					IsChoice:         true,
+				}); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		for _, v := range item.Choices {
+			for v.Index >= len(*Contents) {
+				*Contents = append(*Contents, ChatStreamContentBlock{})
+			}
+			(*Contents)[v.Index].ContentID = item.ID
+			(*Contents)[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
+			(*Contents)[v.Index].ContentBuffer.WriteString(v.Delta.Content)
+		}
+		if item.Usage != nil && item.StreamStats != nil {
+			//存储token用量
+			*ItemUUID = item.ID
+			if err = ModelSer.CreateEgoDialogueItem(ctx, &egoclient.EgoDialogueItem{
+				UUID:             item.ID,
+				PromptTokens:     item.Usage.PromptTokens,
+				DialogueID:       DialogueID,
+				CompletionTokens: item.Usage.CompletionTokens,
+			}); err != nil {
+				return
+			}
+			log.Printf("createChatCompletionStream usage = %+v", item.Usage)
+			log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
+		}
+		return nil
+	}
 }

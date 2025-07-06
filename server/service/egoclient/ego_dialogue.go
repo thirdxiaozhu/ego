@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/liusuxian/go-aisdk"
+	"github.com/liusuxian/go-aisdk/models"
+	"log"
+	"net"
 	"strconv"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -63,7 +67,7 @@ func (EDService *EgoDialogueService) GetEgoDialogue(ctx context.Context, ID stri
 // GetEgoDialogueByUuid 根据ID获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogueByUuid(ctx context.Context, Uuid string) (ED egoclient.EgoDialogue, err error) {
-	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("Model.Limits").Preload("User").Preload("User.VipStatus").Preload("Histories").Preload("Items").First(&ED).Error
+	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").Preload("User.VipStatus").Preload("Histories").Preload("Items").First(&ED).Error
 	return
 }
 
@@ -144,12 +148,28 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 		}
 
 		go func() {
-			if handler.HandleRespFunc != nil {
-				err = handler.HandleRespFunc(ctx, ED, resp)
-				if err != nil {
-					return
+			streamResp := resp.(models.ChatResponseStream)
+			if err = streamResp.ForEach(handler.HandleRespFunc(ctx, ED.ID)); err != nil {
+				switch {
+				case errors.Is(err, aisdk.ErrTooManyEmptyStreamMessages):
+					fmt.Println("ErrTooManyEmptyStreamMessages =", true)
+				case errors.Is(err, aisdk.ErrStreamReturnIntervalTimeout):
+					fmt.Println("ErrStreamReturnIntervalTimeout =", true)
+				default:
+					var netErr net.Error
+					if errors.As(err, &netErr) {
+						fmt.Println("net.Error =", true)
+					}
 				}
+				log.Printf("createChatCompletionStream item error = %v", err)
+				return
 			}
+			//if handler.HandleRespFunc != nil {
+			//	err = handler.HandleRespFunc(ctx, ED, resp)
+			//	if err != nil {
+			//		return
+			//	}
+			//}
 		}()
 
 		return nil
