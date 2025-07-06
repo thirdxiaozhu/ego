@@ -149,6 +149,9 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 
 		go func() {
 			streamResp := resp.(models.ChatResponseStream)
+			if handler.HandleRespFunc == nil {
+				return
+			}
 			if err = streamResp.ForEach(handler.HandleRespFunc(ctx, ED.ID)); err != nil {
 				switch {
 				case errors.Is(err, aisdk.ErrTooManyEmptyStreamMessages):

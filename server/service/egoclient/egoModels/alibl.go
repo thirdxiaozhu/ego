@@ -10,7 +10,6 @@ import (
 	"github.com/liusuxian/go-aisdk/consts"
 	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
-	"log"
 	"strings"
 	"time"
 )
@@ -145,7 +144,6 @@ func (s *AliBLService) AliBLAssemble(ED *egoclient.EgoDialogue, Req *egoclientRe
 
 func (s *AliBLService) AliBLChatHandler(ctx context.Context, DialogueID uint) func(item models.ChatBaseResponse, isFinished bool) error {
 	var Contents []ChatStreamContentBlock
-	var ItemUUID string
 	var DialogueItem egoclient.EgoDialogueItem
 	return func(item models.ChatBaseResponse, isFinished bool) (err error) {
 		if isFinished {
@@ -153,7 +151,7 @@ func (s *AliBLService) AliBLChatHandler(ctx context.Context, DialogueID uint) fu
 			for _, v := range Contents {
 				if err = ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
 					Role:             egoclient.AssistantRole,
-					Item:             ItemUUID,
+					Item:             DialogueItem.UUID,
 					DialogueID:       DialogueID,
 					ReasoningContent: v.ReasoningBuffer.String(),
 					Content:          v.ContentBuffer.String(),
@@ -183,17 +181,8 @@ func (s *AliBLService) AliBLChatHandler(ctx context.Context, DialogueID uint) fu
 			DialogueItem.PromptTokens = item.Usage.PromptTokens
 			DialogueItem.DialogueID = DialogueID
 			DialogueItem.CompletionTokens = item.Usage.CompletionTokens
-			//ItemUUID = item.ID
-			//if err = ModelSer.CreateEgoDialogueItem(ctx, &egoclient.EgoDialogueItem{
-			//	UUID:             item.ID,
-			//	PromptTokens:     item.Usage.PromptTokens,
-			//	DialogueID:       DialogueID,
-			//	CompletionTokens: item.Usage.CompletionTokens,
-			//}); err != nil {
-			//	return
-			//}
-			log.Printf("createChatCompletionStream usage = %+v", item.Usage)
-			log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
+			//log.Printf("createChatCompletionStream usage = %+v", item.Usage)
+			//log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
 		}
 		return nil
 	}
