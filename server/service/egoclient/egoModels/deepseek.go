@@ -35,7 +35,24 @@ func (s *DeepseekService) initAssemblers() {
 		},
 	}
 }
+func (s *DeepseekService) ParseChatRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest) (*models.ChatRequest, error) {
+	model := consts.DeepSeekChat
+	if Req.ChatOption.Reasoning {
+		model = consts.DeepSeekReasoner
+	}
 
+	chatReq := models.ChatRequest{
+		Provider: consts.DeepSeek,
+		Model:    model,
+		UserInfo: models.UserInfo{
+			User: *ED.User.UserID,
+		},
+		Stream:              models.Bool(true),
+		MaxCompletionTokens: models.Int(4096),
+	}
+
+	return &chatReq, nil
+}
 func (s *DeepseekService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
 	userMsg := &models.UserMessage{
 		Content: Text,
@@ -47,24 +64,16 @@ func (s *DeepseekService) ParseChatModal(ModelName string, Text string, modals [
 	return userMsg, nil
 }
 
-func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest) (httpclient.Response, error) {
 	if Req.ChatOption == nil {
 		return nil, errors.New("错误的请求格式")
 	}
-	model := consts.DeepSeekChat
-	if Req.ChatOption.Reasoning {
-		model = consts.DeepSeekReasoner
-	}
-
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
-	chatReq := models.ChatRequest{
-		Provider: consts.DeepSeek,
-		Model:    model,
-		UserInfo: models.UserInfo{
-			User: *ED.User.UserID,
-		},
-		Stream:              models.Bool(true),
-		MaxCompletionTokens: models.Int(4096),
+
+	var chatReq *models.ChatRequest
+	var err error
+	if chatReq, err = s.ParseChatRequest(ED, Req); err != nil {
+		return nil, err
 	}
 	//插入历史消息
 	for _, v := range ED.Histories {
@@ -73,13 +82,12 @@ func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Re
 
 	//插入用户当前消息
 	var userMsg *models.UserMessage
-	var err error
 	if userMsg, err = s.ParseChatModal("", Req.Text, Req.ChatOption.Multimodal); err != nil {
 		return nil, err
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)
 
-	return global.AiSDK.CreateChatCompletionStream(ctx, chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
+	return global.AiSDK.CreateChatCompletionStream(ctx, *chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
 }
 
 func (s *DeepseekService) DeepSeekChatHandler(ctx context.Context, DialogueID uint) func(item models.ChatBaseResponse, isFinished bool) error {

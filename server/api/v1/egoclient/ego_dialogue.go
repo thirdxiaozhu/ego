@@ -204,7 +204,7 @@ func (EDApi *EgoDialogueApi) PostEgoDialogueUserMsg(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
 
-	var ED egoclientReq.EgoDialoguePostUserMsg
+	var ED egoclientReq.EgoDialoguePostRequest
 	err := c.ShouldBindJSON(&ED)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)

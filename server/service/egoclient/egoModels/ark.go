@@ -39,6 +39,21 @@ func (s *ArkService) initAssemblers() {
 	}
 }
 
+func (s *ArkService) ParseChatRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest) (*models.ChatRequest, error) {
+	chatReq := models.ChatRequest{
+		Provider: ED.Model.ModelProvider,
+		Model:    *ED.Model.ModelName,
+		UserInfo: models.UserInfo{
+			User: *ED.User.UserID,
+		},
+		Stream:              models.Bool(true),
+		MaxCompletionTokens: models.Int(4096),
+		StreamOptions: &models.ChatStreamOptions{
+			IncludeUsage: models.Bool(true),
+		},
+	}
+	return &chatReq, nil
+}
 func (s *ArkService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
 	userMsg := &models.UserMessage{}
 
@@ -73,22 +88,16 @@ func (s *ArkService) ParseChatModal(ModelName string, Text string, modals []egoc
 	return userMsg, nil
 }
 
-func (s *ArkService) DoubaoSeedAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+func (s *ArkService) DoubaoSeedAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest) (httpclient.Response, error) {
 	if Req.ChatOption == nil {
 		return nil, errors.New("错误的请求格式")
 	}
 	ctx := context.WithValue(context.Background(), "Dialogue", ED)
-	chatReq := models.ChatRequest{
-		Provider: ED.Model.ModelProvider,
-		Model:    *ED.Model.ModelName,
-		UserInfo: models.UserInfo{
-			User: *ED.User.UserID,
-		},
-		Stream:              models.Bool(true),
-		MaxCompletionTokens: models.Int(4096),
-		StreamOptions: &models.ChatStreamOptions{
-			IncludeUsage: models.Bool(true),
-		},
+
+	var chatReq *models.ChatRequest
+	var err error
+	if chatReq, err = s.ParseChatRequest(ED, Req); err != nil {
+		return nil, err
 	}
 
 	if Req.ChatOption.Reasoning == true {
@@ -104,16 +113,15 @@ func (s *ArkService) DoubaoSeedAssemble(ED *egoclient.EgoDialogue, Req *egoclien
 
 	//插入用户当前消息
 	var userMsg *models.UserMessage
-	var err error
 	if userMsg, err = s.ParseChatModal(*ED.Model.ModelName, Req.Text, Req.ChatOption.Multimodal); err != nil {
 		return nil, err
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)
 
-	return global.AiSDK.CreateChatCompletionStream(ctx, chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
+	return global.AiSDK.CreateChatCompletionStream(ctx, *chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
 }
 
-func (s *ArkService) DoubaoSeedReamAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
+func (s *ArkService) DoubaoSeedReamAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest) (httpclient.Response, error) {
 	if Req.ImageOption == nil {
 		return nil, errors.New("错误的请求格式")
 	}

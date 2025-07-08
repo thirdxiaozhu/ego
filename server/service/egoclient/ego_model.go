@@ -144,9 +144,9 @@ func (eModelService *EgoModelService) CreateCallRecord(EMRS egoclient.EgoModelRe
 	return
 }
 
-type ModelOperation func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) error
+type ModelOperation func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostRequest) error
 
-func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg, operation ModelOperation) (err error) {
+func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest, operation ModelOperation) (err error) {
 
 	//当前是北京时间，如果未来要改成UTC时间，改为 time.Now().UTC()（国际化）
 	//now := time.Now()

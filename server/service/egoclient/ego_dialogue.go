@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/liusuxian/go-aisdk"
 	"github.com/liusuxian/go-aisdk/models"
 	"log"
-	"net"
 	"strconv"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -109,14 +107,14 @@ func (EDService *EgoDialogueService) GetEgoDialoguePublic(ctx context.Context) {
 
 // PostEgoDialogueUserMsg 创建Ego对话记录
 // Author [yourname](https://github.com/yourname)
-func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context, Req *egoclientReq.EgoDialoguePostUserMsg) error {
+func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context, Req *egoclientReq.EgoDialoguePostRequest) error {
 	ED, err := EDService.GetEgoDialogueByUuid(ctx, Req.DialogueID)
 	if err != nil {
 		return errors.New("无法找到对话")
 	}
 
 	service := EgoModelService{}
-	err = service.CanCallModel(&ED, Req, func(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) error {
+	err = service.CanCallModel(&ED, Req, func(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest) error {
 		//发送请求
 		var (
 			handler *egoModels.ModelHandler
@@ -153,26 +151,9 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 				return
 			}
 			if err = streamResp.ForEach(handler.HandleRespFunc(ctx, ED.ID)); err != nil {
-				switch {
-				case errors.Is(err, aisdk.ErrTooManyEmptyStreamMessages):
-					fmt.Println("ErrTooManyEmptyStreamMessages =", true)
-				case errors.Is(err, aisdk.ErrStreamReturnIntervalTimeout):
-					fmt.Println("ErrStreamReturnIntervalTimeout =", true)
-				default:
-					var netErr net.Error
-					if errors.As(err, &netErr) {
-						fmt.Println("net.Error =", true)
-					}
-				}
 				log.Printf("createChatCompletionStream item error = %v", err)
 				return
 			}
-			//if handler.HandleRespFunc != nil {
-			//	err = handler.HandleRespFunc(ctx, ED, resp)
-			//	if err != nil {
-			//		return
-			//	}
-			//}
 		}()
 
 		return nil

@@ -10,6 +10,7 @@ import (
 	"github.com/liusuxian/go-aisdk/consts"
 	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
+	"strings"
 )
 
 type ModelService struct {
@@ -52,7 +53,7 @@ func GetHandler(ED *egoclient.EgoDialogue) (*ModelHandler, error) {
 	return service.GetModelHandler(ED)
 }
 
-type AssembleRequest func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error)
+type AssembleRequest func(*egoclient.EgoDialogue, *egoclientReq.EgoDialoguePostRequest) (httpclient.Response, error)
 
 type HandleResponse func(ctx context.Context, DialogueID uint) func(item models.ChatBaseResponse, isFinished bool) error
 
@@ -63,6 +64,7 @@ type ModelHandler struct {
 
 type Service interface {
 	GetModelHandler(*egoclient.EgoDialogue) (*ModelHandler, error)
+	ParseChatRequest(ED *egoclient.EgoDialogue, req *egoclientReq.EgoDialoguePostRequest) (*models.ChatRequest, error)
 	ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error)
 }
 
@@ -81,6 +83,15 @@ func (s *BasicService) GetModelHandler(ED *egoclient.EgoDialogue) (*ModelHandler
 		return nil, errors.New("assemble Function not exists")
 	}
 	return handler, nil
+}
+
+func (s *BasicService) CheckModelValid(modelName string, toMatch ...string) bool {
+	for _, match := range toMatch {
+		if strings.Contains(modelName, match) {
+			return true
+		}
+	}
+	return false
 }
 
 type ChatStreamContentBlock struct {

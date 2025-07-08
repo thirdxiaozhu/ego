@@ -10,7 +10,7 @@ import (
 	"github.com/liusuxian/go-aisdk/consts"
 	"github.com/liusuxian/go-aisdk/httpclient"
 	"github.com/liusuxian/go-aisdk/models"
-	"strings"
+	"log"
 	"time"
 )
 
@@ -39,15 +39,6 @@ func (s *AliBLService) initAssemblers() {
 	}
 }
 
-func CheckModalValid(modelName string, toMatch ...string) bool {
-	for _, match := range toMatch {
-		if strings.Contains(modelName, match) {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *AliBLService) ParseChatModal(ModelName string, Text string, modals []egoclientReq.EgoDialogueMultiModal) (*models.UserMessage, error) {
 	userMsg := &models.UserMessage{}
 
@@ -67,12 +58,12 @@ func (s *AliBLService) ParseChatModal(ModelName string, Text string, modals []eg
 
 		switch modal.Type {
 		case models.ChatUserMsgPartTypeText:
-			if CheckModalValid(ModelName, "qwen-vl", "qvq", "qwen-omni") != true {
+			if s.CheckModelValid(ModelName, "qwen-vl", "qvq", "qwen-omni") != true {
 				return nil, errors.New(fmt.Sprintf("该模型不支持多模态类型 %s", modal.Type))
 			}
 			userMsgPart.Text = modal.Text
 		case models.ChatUserMsgPartTypeImageURL:
-			if CheckModalValid(ModelName, "qwen-vl", "qvq", "qwen-omni") != true {
+			if s.CheckModelValid(ModelName, "qwen-vl", "qvq", "qwen-omni") != true {
 				return nil, errors.New(fmt.Sprintf("该模型不支持多模态类型 %s", modal.Type))
 			}
 			userMsgPart.ImageURL = &models.ChatUserMsgImageURL{URL: modal.Url}
@@ -86,44 +77,54 @@ func (s *AliBLService) ParseChatModal(ModelName string, Text string, modals []eg
 	return userMsg, nil
 }
 
-func (s *AliBLService) AliBLAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostUserMsg) (httpclient.Response, error) {
-	if Req.ChatOption == nil {
-		return nil, errors.New("错误的请求格式")
-	}
-	ctx := context.WithValue(context.Background(), "Dialogue", ED)
+func (s *AliBLService) ParseChatRequest(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest) (*models.ChatRequest, error) {
+	modelName := *ED.Model.ModelName
+
 	chatReq := models.ChatRequest{
-		//UserInfo: models.UserInfo{
-		//	User: *ED.User.UserID,
-		//},
-		//Provider:            ED.Model.ModelProvider,
-		//Model:               *ED.Model.ModelName,
-		//MaxCompletionTokens: models.Int(4096),
-		//FrequencyPenalty:    models.Float32(1.0),
-		//EnableThinking:      models.Bool(Req.ChatOption.Reasoning), //Qwen3 默认开启thinking
-		//Stream:              models.Bool(true),                     // 不会被序列化，会放到请求头中
-		//StreamOptions: &models.ChatStreamOptions{
-		//	IncludeUsage: models.Bool(true),
-		//}, // 不会被序列化
 		UserInfo: models.UserInfo{
 			User: "123456",
 		},
-		Provider:            consts.AliBL,
-		Model:               consts.AliBLQwenVlMax,
+		Provider:            ED.Model.ModelProvider,
+		Model:               modelName,
 		FrequencyPenalty:    models.Float32(1.0),
 		MaxCompletionTokens: models.Int(4096),
 		// Metadata:            map[string]string{"X-DashScope-DataInspection": "{\"input\": \"cip\", \"output\": \"cip\"}"},
-		WebSearchOptions: &models.ChatWebSearchOptions{
+		//WebSearchOptions: &models.ChatWebSearchOptions{
+		//	EnableSource:   models.Bool(true),
+		//	EnableCitation: models.Bool(true),
+		//	CitationFormat: models.ChatCitationFormatRefNumber,
+		//	ForcedSearch:   models.Bool(true),
+		//	SearchStrategy: models.ChatSearchStrategyPro,
+		//},
+		EnableThinking: models.Bool(Req.ChatOption.Reasoning),
+		Stream:         models.Bool(true), // 不会被序列化，会放到请求头中
+		StreamOptions: &models.ChatStreamOptions{
+			IncludeUsage: models.Bool(true),
+		}, // 不会被序列化
+	}
+
+	if Req.ChatOption.WebSearch == true && s.CheckModelValid(modelName, "qwen-max", "qwen-plus", "qwen-turbo", "qwq") == true {
+		chatReq.WebSearchOptions = &models.ChatWebSearchOptions{
 			EnableSource:   models.Bool(true),
 			EnableCitation: models.Bool(true),
 			CitationFormat: models.ChatCitationFormatRefNumber,
 			ForcedSearch:   models.Bool(true),
 			SearchStrategy: models.ChatSearchStrategyPro,
-		},
-		EnableThinking: models.Bool(true),
-		Stream:         models.Bool(true), // 不会被序列化，会放到请求头中
-		StreamOptions: &models.ChatStreamOptions{
-			IncludeUsage: models.Bool(true),
-		}, // 不会被序列化
+		}
+	}
+
+	return &chatReq, nil
+}
+
+func (s *AliBLService) AliBLAssemble(ED *egoclient.EgoDialogue, Req *egoclientReq.EgoDialoguePostRequest) (httpclient.Response, error) {
+	if Req.ChatOption == nil {
+		return nil, errors.New("错误的请求格式")
+	}
+	ctx := context.WithValue(context.Background(), "Dialogue", ED)
+	var chatReq *models.ChatRequest
+	var err error
+	if chatReq, err = s.ParseChatRequest(ED, Req); err != nil {
+		return nil, err
 	}
 
 	//插入历史消息
@@ -133,13 +134,12 @@ func (s *AliBLService) AliBLAssemble(ED *egoclient.EgoDialogue, Req *egoclientRe
 
 	//插入用户当前消息
 	var userMsg *models.UserMessage
-	var err error
 	if userMsg, err = s.ParseChatModal(*ED.Model.ModelName, Req.Text, Req.ChatOption.Multimodal); err != nil {
 		return nil, err
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)
 
-	return global.AiSDK.CreateChatCompletionStream(ctx, chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
+	return global.AiSDK.CreateChatCompletionStream(ctx, *chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
 }
 
 func (s *AliBLService) AliBLChatHandler(ctx context.Context, DialogueID uint) func(item models.ChatBaseResponse, isFinished bool) error {
@@ -167,6 +167,7 @@ func (s *AliBLService) AliBLChatHandler(ctx context.Context, DialogueID uint) fu
 			}
 			return nil
 		}
+		// 未来在这里做 SSE，同时解析网页annotations字段
 		for _, v := range item.Choices {
 			for v.Index >= len(Contents) {
 				Contents = append(Contents, ChatStreamContentBlock{})
@@ -175,14 +176,13 @@ func (s *AliBLService) AliBLChatHandler(ctx context.Context, DialogueID uint) fu
 			Contents[v.Index].ReasoningBuffer.WriteString(v.Delta.ReasoningContent)
 			Contents[v.Index].ContentBuffer.WriteString(v.Delta.Content)
 		}
+		log.Printf("createChatCompletionStream item = %s", httpclient.MustString(item))
 		if item.Usage != nil && item.StreamStats != nil {
 			//更新token用量
 			DialogueItem.UUID = item.ID
 			DialogueItem.PromptTokens = item.Usage.PromptTokens
 			DialogueItem.DialogueID = DialogueID
 			DialogueItem.CompletionTokens = item.Usage.CompletionTokens
-			//log.Printf("createChatCompletionStream usage = %+v", item.Usage)
-			//log.Printf("createChatCompletionStream stream_stats = %+v", item.StreamStats)
 		}
 		return nil
 	}
