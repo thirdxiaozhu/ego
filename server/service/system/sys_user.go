@@ -315,3 +315,20 @@ func (userService *UserService) ResetPassword(ID uint, password string) (err err
 	err = global.GVA_DB.Model(&system.SysUser{}).Where("id = ?", ID).Update("password", utils.BcryptHash(password)).Error
 	return err
 }
+
+func (userService *UserService) UpdateEgoClientUserPoints(userID uint, points int) (err error) {
+	// 从数据库获取用户
+	var user system.SysUser
+	if err = global.GVA_DB.Where("id = ?", userID).Preload("VipStatus").First(&user).Error; err != nil {
+		return err
+	}
+
+	// 扣减积分
+	user.VipStatus.Points -= points
+
+	// 更新积分
+	err = global.GVA_DB.Model(&system.EgoVipStatus{}).Where("user_id = ?", userID).
+		Update("points", user.VipStatus.Points).Error
+
+	return err
+}

@@ -6,6 +6,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
 )
 
 type EgoModelService struct{}
@@ -191,8 +192,11 @@ func (eModelService *EgoModelService) CanCallModel(ED *egoclient.EgoDialogue, Re
 
 	//当前是北京时间，如果未来要改成UTC时间，改为 time.Now().UTC()（国际化）
 	ED.User.VipStatus.Points -= ED.Model.NeedPoints
-	var ecuService EgoClientUserService
-	if err = ecuService.UpdateEgoClientUser(nil, ED.User); err != nil {
+	var ecuService system.UserService
+	//if err = ecuService.UpdateEgoClientUser(nil, ED.User); err != nil {
+	//	return err
+	//}
+	if err = ecuService.UpdateEgoClientUserPoints(ED.UserID, ED.Model.NeedPoints); err != nil {
 		return err
 	}
 

@@ -82,7 +82,7 @@ func (ENAService *EgoNoramlAgentService) GetEgoNoramlAgentInfoListUser(ctx conte
 	db := global.GVA_DB.Model(&egoclient.EgoNoramlAgent{})
 	var ENAs []egoclient.EgoNoramlAgent
 
-	err = db.Joins("Owner").Where("owner_id = ? AND authority_id = ? AND is_private = ?", info.OwnerID, 999, 0).Count(&total).Error
+	err = db.Joins("Owner").Where("owner_id = ? OR (authority_id = ? AND is_private = ?)", info.OwnerID, 9991, 0).Count(&total).Error
 
 	if err != nil {
 		return

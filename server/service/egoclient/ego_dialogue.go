@@ -21,6 +21,7 @@ type EgoDialogueService struct{}
 // CreateEgoDialogue 创建Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) CreateEgoDialogue(ctx context.Context, userid uint, ED *egoclient.EgoDialogue) (err error) {
+	// 7.12 TODO： 搞出来一个智能体选项（和提示词），如果智能体为空，则system prompt为空，否则利用system prompt作为智能体提示大模型
 	ED.UserID = userid
 	ED.UUID, _ = uuid.NewV6()
 

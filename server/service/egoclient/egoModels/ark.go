@@ -44,7 +44,7 @@ func (s *ArkService) ParseChatRequest(ED *egoclient.EgoDialogue, Req *egoclientR
 		Provider: ED.Model.ModelProvider,
 		Model:    *ED.Model.ModelName,
 		UserInfo: models.UserInfo{
-			User: *ED.User.UserID,
+			User: ED.User.UUID.String(),
 		},
 		Stream:              models.Bool(true),
 		MaxCompletionTokens: models.Int(4096),
@@ -130,7 +130,7 @@ func (s *ArkService) DoubaoSeedReamAssemble(ED *egoclient.EgoDialogue, Req *egoc
 		Provider: ED.Model.ModelProvider,
 		Model:    *ED.Model.ModelName,
 		UserInfo: models.UserInfo{
-			User: *ED.User.UserID,
+			User: ED.User.UUID.String(),
 		},
 		Prompt: Req.Text,
 		Size:   models.ImageSize(Req.ImageOption.Size),

@@ -2,6 +2,7 @@
 package egoclient
 
 import (
+	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"time"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -10,11 +11,11 @@ import (
 // Ego新闻推送 结构体  EgoNews
 type EgoNews struct {
 	global.GVA_MODEL
-	ReleaseTime *time.Time    `json:"releaseTime" form:"releaseTime" gorm:"column:release_time;"` //发布时间
-	PublisherID *uint         `json:"publisherID" form:"publisherID" gorm:"column:publisher_id;"` //发布者
-	Publisher   EgoClientUser `json:"publisher" form:"publisher" gorm:"foreignKey:ID;references:PublisherID;"`
-	Title       *string       `json:"title" form:"title" gorm:"column:title;"`
-	Content     *string       `json:"content" form:"content" gorm:"column:content; type:text;"` //内容
+	ReleaseTime *time.Time     `json:"releaseTime" form:"releaseTime" gorm:"column:release_time;"` //发布时间
+	PublisherID *uint          `json:"publisherID" form:"publisherID" gorm:"column:publisher_id;"` //发布者
+	Publisher   system.SysUser `json:"publisher" form:"publisher" gorm:"foreignKey:ID;references:PublisherID;"`
+	Title       *string        `json:"title" form:"title" gorm:"column:title;"`
+	Content     *string        `json:"content" form:"content" gorm:"column:content; type:text;"` //内容
 }
 
 // TableName Ego新闻推送 EgoNews自定义表名 ego_news

@@ -45,7 +45,7 @@ func (s *DeepseekService) ParseChatRequest(ED *egoclient.EgoDialogue, Req *egocl
 		Provider: consts.DeepSeek,
 		Model:    model,
 		UserInfo: models.UserInfo{
-			User: *ED.User.UserID,
+			User: ED.User.UUID.String(),
 		},
 		Stream:              models.Bool(true),
 		MaxCompletionTokens: models.Int(4096),

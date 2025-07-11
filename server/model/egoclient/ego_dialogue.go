@@ -3,6 +3,7 @@ package egoclient
 
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/google/uuid"
 	"github.com/liusuxian/go-aisdk/models"
 )
@@ -42,11 +43,14 @@ func (role RoleType) GetMessage(content, reasonContent string) models.ChatMessag
 }
 
 // Ego对话 结构体  EgoDialogue
+// 7.12 TODO: 搞一个智能体外键
 type EgoDialogue struct {
 	global.GVA_MODEL
 	UUID      uuid.UUID            `json:"uuid" form:"uuid" gorm:"column:uuid;"`   //对话UUID
 	UserID    uint                 `json:"userID" form:"user" gorm:"column:user;"` //所属用户
-	User      EgoClientUser        `json:"user" gorm:"foreignKey:ID;references:UserID;"`
+	User      system.SysUser       `json:"user" gorm:"foreignKey:ID;references:UserID;"`
+	AgentID   *uint                `json:"agentID" form:"agent" gorm:"column:agent;"`
+	Agent     EgoNoramlAgent       `json:"agent" gorm:"foreignKey:ID;references:AgentID;"`
 	ModelID   int                  `json:"modelID" form:"model" gorm:"column:model;"` //模型
 	Model     EgoModel             `json:"model" gorm:"foreignKey:ID;references:ModelID;"`
 	Items     []EgoDialogueItem    `json:"items" gorm:"foreignKey:DialogueID"`      //token使用情况

@@ -66,7 +66,7 @@
 
         <el-table-column align="left" label="对话UUID" prop="uuid" width="120" />
 
-        <el-table-column align="left" label="所属用户" prop="user.userID" width="120" />
+        <el-table-column align="left" label="所属用户" prop="user.userName" width="120" />
 
         <el-table-column align="left" label="服务提供商" prop="model.modelProvider" width="120">
           <template #default="scope">
@@ -129,7 +129,7 @@
           {{ detailFrom.uuid }}
         </el-descriptions-item>
         <el-descriptions-item label="所属用户">
-          {{ detailFrom.user.userID }}
+          {{ detailFrom.user.userName }}
         </el-descriptions-item>
         <el-descriptions-item label="服务提供商">
           {{ detailFrom.model.modelProvider }}
