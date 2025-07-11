@@ -5,6 +5,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -24,12 +25,15 @@ func (ENApi *EgoNewsApi) CreateEgoNews(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
 
+	userid := utils.GetUserID(c)
+
 	var EN egoclient.EgoNews
 	err := c.ShouldBindJSON(&EN)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	EN.PublisherID = &userid
 	err = ENService.CreateEgoNews(ctx, &EN)
 	if err != nil {
 		global.GVA_LOG.Error("创建失败!", zap.Error(err))

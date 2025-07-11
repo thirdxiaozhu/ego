@@ -3,15 +3,16 @@ package egoclient
 
 import (
 	"encoding/json"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"strconv"
 	"time"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
+	//"github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/google/uuid"
 )
 
-var _ system.Login = (*EgoClientUser)(nil)
+//var _ system.Login = (*EgoClientUser)(nil)
 
 // EGO用户 结构体  EgoClientUser
 type EgoClientUser struct {
@@ -27,29 +28,34 @@ type EgoClientUser struct {
 	VipStatus   EgoVipStatus `json:"vipStatus" form:"vipStatus" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;"` //VIP状态
 }
 
-func (s *EgoClientUser) GetUsername() string {
-	return *s.UserID
-}
-
-func (s *EgoClientUser) GetNickname() string {
-	return *s.Username
-}
-
-func (s *EgoClientUser) GetUUID() uuid.UUID {
-	return s.UUID
-}
-
-func (s *EgoClientUser) GetUserId() uint {
-	return s.ID
-}
-
-func (s *EgoClientUser) GetAuthorityId() uint {
-	return s.AuthorityId
-}
-
-func (s *EgoClientUser) GetUserInfo() any {
-	return *s
-}
+//
+//func (s *EgoClientUser) GetUsername() string {
+//	return *s.UserID
+//}
+//
+//func (s *EgoClientUser) GetNickname() string {
+//	return *s.Username
+//}
+//
+//func (s *EgoClientUser) GetUUID() uuid.UUID {
+//	return s.UUID
+//}
+//
+//func (s *EgoClientUser) GetUserId() uint {
+//	return s.ID
+//}
+//
+//func (s *EgoClientUser) GetAuthorityId() uint {
+//	return s.AuthorityId
+//}
+//
+//func (s *EgoClientUser) GetUserInfo() any {
+//	return *s
+//}
+//
+//func (EgoClientUser) TableName() string {
+//	return "ego_client_users"
+//}
 
 type EgoVipStatus struct {
 	global.GVA_MODEL

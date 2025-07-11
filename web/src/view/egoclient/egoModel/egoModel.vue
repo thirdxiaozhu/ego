@@ -125,7 +125,7 @@
           <el-input v-model="formData.modelName" :clearable="true" placeholder="请输入模型名称" />
         </el-form-item>
         <el-form-item label="积分需求:" prop="needPoints">
-          <el-input v-model="formData.needPoints" :clearable="true" placeholder="请输入积分需求" />
+          <el-input v-model.number="formData.needPoints" :clearable="true" placeholder="请输入积分需求" />
         </el-form-item>
 
       </el-form>

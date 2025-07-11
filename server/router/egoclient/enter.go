@@ -7,6 +7,7 @@ type RouterGroup struct {
 	EgoDialogueRouter
 	EgoModelRouter
 	EgoNewsRouter
+	EgoNoramlAgentRouter
 }
 
 var (
@@ -14,4 +15,5 @@ var (
 	EDApi     = api.ApiGroupApp.EgoclientApiGroup.EgoDialogueApi
 	eModelApi = api.ApiGroupApp.EgoclientApiGroup.EgoModelApi
 	ENApi     = api.ApiGroupApp.EgoclientApiGroup.EgoNewsApi
+	ENAApi    = api.ApiGroupApp.EgoclientApiGroup.EgoNoramlAgentApi
 )

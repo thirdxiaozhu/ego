@@ -23,12 +23,8 @@
           />
         </el-form-item>
 
-        <el-form-item label="对话UUID" prop="uuid">
-          <el-input v-model="searchInfo.uuid" placeholder="搜索条件" />
-        </el-form-item>
-
-        <el-form-item label="所属用户" prop="user">
-          <el-input v-model.number="searchInfo.user" placeholder="搜索条件" />
+        <el-form-item label="拥有者" prop="ownerID">
+          <el-input v-model.number="searchInfo.ownerID" placeholder="搜索条件" />
         </el-form-item>
 
 
@@ -64,26 +60,15 @@
           <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
 
-        <el-table-column align="left" label="对话UUID" prop="uuid" width="120" />
+        <el-table-column align="left" label="拥有者" prop="owner.username" width="120" />
 
-        <el-table-column align="left" label="所属用户" prop="user.userID" width="120" />
-
-        <el-table-column align="left" label="服务提供商" prop="model.modelProvider" width="120">
-          <template #default="scope">
-            {{ filterDict(scope.row.model.modelProvider,modelProviderOptions) }}
-          </template>
-        </el-table-column>
-        <el-table-column align="left" label="服务类型" prop="model.modelType" width="120">
-          <template #default="scope">
-            {{ filterDict(scope.row.model.modelType,modelTypeOptions) }}
-          </template>
-        </el-table-column>
-        <el-table-column align="left" label="模型" prop="model.modelName" width="120" />
+        <el-table-column align="left" label="系统提示" prop="systemPrompt" width="120" />
+        <el-table-column align="left" label="是否私有" prop="isPrivate" width="120" />
 
         <el-table-column align="left" label="操作" fixed="right" :min-width="appStore.operateMinWith">
           <template #default="scope">
             <el-button  type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
-            <el-button  type="primary" link icon="edit" class="table-button" @click="updateEgoDialogueFunc(scope.row)">编辑</el-button>
+            <el-button  type="primary" link icon="edit" class="table-button" @click="updateEgoNoramlAgentFunc(scope.row)">编辑</el-button>
             <el-button   type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -112,40 +97,28 @@
       </template>
 
       <el-form :model="formData" label-position="top" ref="elFormRef" :rules="rule" label-width="80px">
-        <el-form-item label="所属用户:" prop="user">
-          <el-input v-model.number="formData.user" :clearable="true" placeholder="请输入所属用户" />
+<!--        <el-form-item label="拥有者:" prop="owner">-->
+<!--          <el-input v-model.number="formData.owner" :clearable="true" placeholder="请输入拥有者" />-->
+<!--        </el-form-item>-->
+        <el-form-item label="系统提示:" prop="systemPrompt">
+          <el-input v-model="formData.systemPrompt" :clearable="true" placeholder="请输入系统提示" />
         </el-form-item>
-        <el-form-item label="服务提供商:" prop="modelProvider">
-          <el-select v-model="formData.modelProvider" placeholder="请选择服务提供商" style="width:100%" filterable :clearable="true">
-            <el-option v-for="(item,key) in modelProviderOptions" :key="key" :label="item.label" :value="item.value" />
-          </el-select>
+        <el-form-item label="是否私有:" prop="systemPrompt">
+          <el-switch v-model="formData.isPrivate"/>
         </el-form-item>
       </el-form>
     </el-drawer>
 
     <el-drawer destroy-on-close :size="appStore.drawerSize" v-model="detailShow" :show-close="true" :before-close="closeDetailShow" title="查看">
       <el-descriptions :column="1" border>
-        <el-descriptions-item label="对话UUID">
-          {{ detailFrom.uuid }}
+        <el-descriptions-item label="拥有者">
+          {{ detailFrom.owner.username }}
         </el-descriptions-item>
-        <el-descriptions-item label="所属用户">
-          {{ detailFrom.user.userID }}
+        <el-descriptions-item label="系统提示">
+          {{ detailFrom.systemPrompt }}
         </el-descriptions-item>
-        <el-descriptions-item label="服务提供商">
-          {{ detailFrom.model.modelProvider }}
-        </el-descriptions-item>
-        <el-descriptions-item label="服务类型">
-          {{ detailFrom.model.modelType }}
-        </el-descriptions-item>
-        <el-descriptions-item label="模型">
-          {{ detailFrom.model.modelName }}
-        </el-descriptions-item>
-        <el-descriptions-item label="历史记录">
-          {{ detailFrom.histories }}
-        </el-descriptions-item>
-        <!-- token使用情况记录在Item中 -->
-        <el-descriptions-item label="token使用情况">
-          {{ detailFrom.items }}
+        <el-descriptions-item label="是否私有">
+          {{ detailFrom.isPrivate }}
         </el-descriptions-item>
       </el-descriptions>
     </el-drawer>
@@ -155,13 +128,13 @@
 
 <script setup>
   import {
-    createEgoDialogue,
-    deleteEgoDialogue,
-    deleteEgoDialogueByIds,
-    updateEgoDialogue,
-    findEgoDialogue,
-    getEgoDialogueList
-  } from '@/api/egoclient/egoDialogue'
+    createEgoNoramlAgent,
+    deleteEgoNoramlAgent,
+    deleteEgoNoramlAgentByIds,
+    updateEgoNoramlAgent,
+    findEgoNoramlAgent,
+    getEgoNoramlAgentList
+  } from '@/api/egoclient/egoNormalAgent'
 
   // 全量引入格式化工具 请按需保留
   import { getDictFunc, formatDate, formatBoolean, filterDict ,filterDataSource, returnArrImg, onDownloadFile } from '@/utils/format'
@@ -170,8 +143,10 @@
   import { useAppStore } from "@/pinia"
 
 
+
+
   defineOptions({
-    name: 'EgoDialogue'
+    name: 'EgoNoramlAgent'
   })
 
   // 提交按钮loading
@@ -182,11 +157,10 @@
   const showAllQuery = ref(false)
 
   // 自动化生成的字典（可能为空）以及字段
-  const modelProviderOptions = ref([])
-  const modelTypeOptions = ref([])
   const formData = ref({
-    user: undefined,
-    modelProvider: '',
+    ownerID: undefined,
+    systemPrompt: '',
+    isPrivate: false,
   })
 
 
@@ -233,7 +207,7 @@
 
   // 查询
   const getTableData = async() => {
-    const table = await getEgoDialogueList({ page: page.value, pageSize: pageSize.value, ...searchInfo.value })
+    const table = await getEgoNoramlAgentList({ page: page.value, pageSize: pageSize.value, ...searchInfo.value })
     if (table.code === 0) {
       tableData.value = table.data.list
       total.value = table.data.total
@@ -248,8 +222,6 @@
 
   // 获取需要的字典 可能为空 按需保留
   const setOptions = async () =>{
-    modelProviderOptions.value = await getDictFunc('model-provider')
-    modelTypeOptions.value = await getDictFunc('model-type')
   }
 
   // 获取需要的字典 可能为空 按需保留
@@ -270,7 +242,7 @@
       cancelButtonText: '取消',
       type: 'warning'
     }).then(() => {
-      deleteEgoDialogueFunc(row)
+      deleteEgoNoramlAgentFunc(row)
     })
   }
 
@@ -293,7 +265,7 @@
       multipleSelection.value.map(item => {
         IDs.push(item.ID)
       })
-      const res = await deleteEgoDialogueByIds({ IDs })
+      const res = await deleteEgoNoramlAgentByIds({ IDs })
       if (res.code === 0) {
         ElMessage({
           type: 'success',
@@ -311,8 +283,8 @@
   const type = ref('')
 
   // 更新行
-  const updateEgoDialogueFunc = async(row) => {
-    const res = await findEgoDialogue({ ID: row.ID })
+  const updateEgoNoramlAgentFunc = async(row) => {
+    const res = await findEgoNoramlAgent({ ID: row.ID })
     type.value = 'update'
     if (res.code === 0) {
       formData.value = res.data
@@ -322,8 +294,8 @@
 
 
   // 删除行
-  const deleteEgoDialogueFunc = async (row) => {
-    const res = await deleteEgoDialogue({ ID: row.ID })
+  const deleteEgoNoramlAgentFunc = async (row) => {
+    const res = await deleteEgoNoramlAgent({ ID: row.ID })
     if (res.code === 0) {
       ElMessage({
         type: 'success',
@@ -349,11 +321,9 @@
   const closeDialog = () => {
     dialogFormVisible.value = false
     formData.value = {
-      user: undefined,
-      modelProvider: '',
-      publisher:{
-        username: ''
-      }
+      ownerID: undefined,
+      systemPrompt: '',
+      isPrivate: false,
     }
   }
   // 弹窗确定
@@ -364,13 +334,13 @@
       let res
       switch (type.value) {
         case 'create':
-          res = await createEgoDialogue(formData.value)
+          res = await createEgoNoramlAgent(formData.value)
           break
         case 'update':
-          res = await updateEgoDialogue(formData.value)
+          res = await updateEgoNoramlAgent(formData.value)
           break
         default:
-          res = await createEgoDialogue(formData.value)
+          res = await createEgoNoramlAgent(formData.value)
           break
       }
       btnLoading.value = false
@@ -400,7 +370,7 @@
   // 打开详情
   const getDetails = async (row) => {
     // 打开弹窗
-    const res = await findEgoDialogue({ ID: row.ID })
+    const res = await findEgoNoramlAgent({ ID: row.ID })
     if (res.code === 0) {
       detailFrom.value = res.data
       openDetailShow()
@@ -411,11 +381,7 @@
   // 关闭详情弹窗
   const closeDetailShow = () => {
     detailShow.value = false
-    detailFrom.value = {
-      publisher:{
-        username: ''
-      }
-    }
+    detailFrom.value = {}
   }
 
 
