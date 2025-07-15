@@ -19,6 +19,8 @@
   "/src/view/egoclient/egoModel/egoModelForm.vue": "EgoModelForm",
   "/src/view/egoclient/egoNews/egoNews.vue": "EgoNews",
   "/src/view/egoclient/egoNews/egoNewsForm.vue": "EgoNewsForm",
+  "/src/view/egoclient/egoNormalAgent/egoNormalAgent.vue": "EgoNoramlAgent",
+  "/src/view/egoclient/egoNormalAgent/egoNormalAgentForm.vue": "EgoNoramlAgentForm",
   "/src/view/error/index.vue": "Error",
   "/src/view/error/reload.vue": "Reload",
   "/src/view/example/breakpoint/breakpoint.vue": "BreakPoint",

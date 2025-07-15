@@ -42,7 +42,7 @@ func (role RoleType) GetMessage(content, reasonContent string) models.ChatMessag
 	}
 }
 
-// Ego对话 结构体  EgoDialogue
+// EgoDialogue Ego对话 结构体
 // 7.12 TODO: 搞一个智能体外键
 type EgoDialogue struct {
 	global.GVA_MODEL
@@ -50,7 +50,7 @@ type EgoDialogue struct {
 	UserID    uint                 `json:"userID" form:"user" gorm:"column:user;"` //所属用户
 	User      system.SysUser       `json:"user" gorm:"foreignKey:ID;references:UserID;"`
 	AgentID   *uint                `json:"agentID" form:"agent" gorm:"column:agent;"`
-	Agent     EgoNoramlAgent       `json:"agent" gorm:"foreignKey:ID;references:AgentID;"`
+	Agent     *EgoNoramlAgent      `json:"agent" gorm:"foreignKey:ID;references:AgentID;"`
 	ModelID   int                  `json:"modelID" form:"model" gorm:"column:model;"` //模型
 	Model     EgoModel             `json:"model" gorm:"foreignKey:ID;references:ModelID;"`
 	Items     []EgoDialogueItem    `json:"items" gorm:"foreignKey:DialogueID"`      //token使用情况

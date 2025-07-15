@@ -42,13 +42,16 @@ func (s *DeepseekService) ParseChatRequest(ED *egoclient.EgoDialogue, Req *egocl
 	}
 
 	chatReq := models.ChatRequest{
-		Provider: consts.DeepSeek,
-		Model:    model,
+		Provider:            consts.DeepSeek,
+		Model:               model,
+		MaxCompletionTokens: models.Int(4096),
 		UserInfo: models.UserInfo{
 			User: ED.User.UUID.String(),
 		},
-		Stream:              models.Bool(true),
-		MaxCompletionTokens: models.Int(4096),
+		Stream: models.Bool(true),
+		StreamOptions: &models.ChatStreamOptions{
+			IncludeUsage: models.Bool(true),
+		},
 	}
 
 	return &chatReq, nil
@@ -87,7 +90,7 @@ func (s *DeepseekService) DeepSeekReasonerAssemble(ED *egoclient.EgoDialogue, Re
 	}
 	chatReq.Messages = append(chatReq.Messages, userMsg)
 
-	return global.AiSDK.CreateChatCompletionStream(ctx, *chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*5))
+	return global.AiSDK.CreateChatCompletionStream(ctx, *chatReq, httpclient.WithTimeout(time.Minute*5), httpclient.WithStreamReturnIntervalTimeout(time.Second*20))
 }
 
 func (s *DeepseekService) DeepSeekChatHandler(ctx context.Context, DialogueID uint) func(item models.ChatBaseResponse, isFinished bool) error {

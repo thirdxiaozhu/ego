@@ -4,16 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/liusuxian/go-aisdk/models"
-	"log"
-	"strconv"
-
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/egoclient/egoModels"
 	"github.com/google/uuid"
 	"github.com/liusuxian/go-aisdk/httpclient"
+	"github.com/liusuxian/go-aisdk/models"
+	"log"
+	"strconv"
 )
 
 type EgoDialogueService struct{}
@@ -25,13 +24,34 @@ func (EDService *EgoDialogueService) CreateEgoDialogue(ctx context.Context, user
 	ED.UserID = userid
 	ED.UUID, _ = uuid.NewV6()
 
-	emService := EgoModelService{}
-	_, err = emService.GetEgoModel(ctx, strconv.Itoa(ED.ModelID))
-	if err != nil {
-		return err
-	}
+	//emService := EgoModelService{}
+	//_, err = emService.GetEgoModel(ctx, strconv.Itoa(ED.ModelID))
+	//if err != nil {
+	//	return err
+	//}
 
 	err = global.GVA_DB.Create(ED).Error
+
+	if ED.AgentID != nil {
+		var agent egoclient.EgoNoramlAgent
+		agentService := EgoNoramlAgentService{}
+		agent, err = agentService.GetEgoNoramlAgent(ctx, strconv.Itoa(int(*ED.AgentID)))
+		if err != nil {
+			return err
+		}
+
+		if err = egoModels.ModelSer.CreateEgoDialogueHistory(ctx, &egoclient.EgoDialogueHistory{
+			Role:             egoclient.SystemRole,
+			Item:             "",
+			IsChoice:         true,
+			DialogueID:       ED.ID,
+			ReasoningContent: "",
+			Content:          *agent.SystemPrompt,
+		}); err != nil {
+			global.GVA_LOG.Error("Cannot create dialogue history")
+			return err
+		}
+	}
 	return err
 }
 
@@ -59,14 +79,14 @@ func (EDService *EgoDialogueService) UpdateEgoDialogue(ctx context.Context, ED e
 // GetEgoDialogue 根据ID获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogue(ctx context.Context, ID string) (ED egoclient.EgoDialogue, err error) {
-	err = global.GVA_DB.Where("id = ?", ID).Preload("Model").Preload("User").Preload("Histories").Preload("Items").First(&ED).Error
+	err = global.GVA_DB.Where("id = ?", ID).Preload("Model").Preload("User").Preload("Histories").Preload("Items").Preload("Agent").First(&ED).Error
 	return
 }
 
 // GetEgoDialogueByUuid 根据ID获取Ego对话记录
 // Author [yourname](https://github.com/yourname)
 func (EDService *EgoDialogueService) GetEgoDialogueByUuid(ctx context.Context, Uuid string) (ED egoclient.EgoDialogue, err error) {
-	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").Preload("User.VipStatus").Preload("Histories").Preload("Items").First(&ED).Error
+	err = global.GVA_DB.Where("uuid = ?", Uuid).Preload("Model").Preload("User").Preload("User.VipStatus").Preload("Histories").Preload("Items").Preload("Agent").First(&ED).Error
 	return
 }
 
@@ -95,7 +115,7 @@ func (EDService *EgoDialogueService) GetEgoDialogueInfoList(ctx context.Context,
 	}
 
 	if limit != 0 {
-		db = db.Limit(limit).Offset(offset).Preload("Model").Preload("User")
+		db = db.Limit(limit).Offset(offset).Preload("Model").Preload("User").Preload("Agent")
 	}
 
 	err = db.Find(&EDs).Error
@@ -143,6 +163,7 @@ func (EDService *EgoDialogueService) PostEgoDialogueUserMsg(ctx context.Context,
 			ReasoningContent: "",
 			Content:          Req.Text,
 		}); err != nil {
+			global.GVA_LOG.Error("Cannot create dialogue history")
 			return err
 		}
 

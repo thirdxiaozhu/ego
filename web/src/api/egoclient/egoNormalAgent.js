@@ -96,6 +96,22 @@ export const getEgoNoramlAgentList = (params) => {
 }
 
 // @Tags EgoNoramlAgent
+// @Summary 分页获取EGO普通智能体列表
+// @Security ApiKeyAuth
+// @Accept application/json
+// @Produce application/json
+// @Param data query request.PageInfo true "分页获取EGO普通智能体列表"
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
+// @Router /ENA/getEgoNoramlAgentList [get]
+export const getEgoNoramlAgentListUser = (params) => {
+  return service({
+    url: '/ENA/getEgoNoramlAgentListUser',
+    method: 'get',
+    params
+  })
+}
+
+// @Tags EgoNoramlAgent
 // @Summary 不需要鉴权的EGO普通智能体接口
 // @Accept application/json
 // @Produce application/json

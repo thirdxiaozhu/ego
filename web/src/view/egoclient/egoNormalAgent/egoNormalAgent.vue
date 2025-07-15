@@ -60,9 +60,11 @@
           <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
 
-        <el-table-column align="left" label="拥有者" prop="owner.username" width="120" />
+        <el-table-column align="left" label="UUID" prop="uuid" width="360" />
+        <el-table-column align="left" label="拥有者" prop="owner.userName" width="120" />
 
-        <el-table-column align="left" label="系统提示" prop="systemPrompt" width="120" />
+        <el-table-column align="left" label="标题" prop="title" width="120" />
+        <el-table-column align="left" label="描述" prop="systemPrompt" width="120" />
         <el-table-column align="left" label="是否私有" prop="isPrivate" width="120" />
 
         <el-table-column align="left" label="操作" fixed="right" :min-width="appStore.operateMinWith">
@@ -100,8 +102,11 @@
 <!--        <el-form-item label="拥有者:" prop="owner">-->
 <!--          <el-input v-model.number="formData.owner" :clearable="true" placeholder="请输入拥有者" />-->
 <!--        </el-form-item>-->
-        <el-form-item label="系统提示:" prop="systemPrompt">
-          <el-input v-model="formData.systemPrompt" :clearable="true" placeholder="请输入系统提示" />
+        <el-form-item label="标题:" prop="title">
+          <el-input v-model="formData.title" :clearable="true" placeholder="标题" />
+        </el-form-item>
+        <el-form-item label="描述:" prop="systemPrompt">
+          <el-input v-model="formData.systemPrompt" :clearable="true" placeholder="请输入描述" />
         </el-form-item>
         <el-form-item label="是否私有:" prop="systemPrompt">
           <el-switch v-model="formData.isPrivate"/>
@@ -112,9 +117,12 @@
     <el-drawer destroy-on-close :size="appStore.drawerSize" v-model="detailShow" :show-close="true" :before-close="closeDetailShow" title="查看">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="拥有者">
-          {{ detailFrom.owner.username }}
+          {{ detailFrom.owner.userName }}
         </el-descriptions-item>
-        <el-descriptions-item label="系统提示">
+        <el-descriptions-item label="标题">
+          {{ detailFrom.title }}
+        </el-descriptions-item>
+        <el-descriptions-item label="描述">
           {{ detailFrom.systemPrompt }}
         </el-descriptions-item>
         <el-descriptions-item label="是否私有">
@@ -209,6 +217,7 @@
   const getTableData = async() => {
     const table = await getEgoNoramlAgentList({ page: page.value, pageSize: pageSize.value, ...searchInfo.value })
     if (table.code === 0) {
+      console.log(table.data.list)
       tableData.value = table.data.list
       total.value = table.data.total
       page.value = table.data.page

@@ -115,6 +115,11 @@
         <el-form-item label="所属用户:" prop="user">
           <el-input v-model.number="formData.user" :clearable="true" placeholder="请输入所属用户" />
         </el-form-item>
+        <el-form-item label="选择智能体:" prop="agent">
+          <el-select v-model="formData.agent" placeholder="请选择智能体" style="width:100%" filterable :clearable="true">
+            <el-option v-for="(item,key) in agentOptions" :key="key" :label="item.uuid" :value="item.uuid" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="服务提供商:" prop="modelProvider">
           <el-select v-model="formData.modelProvider" placeholder="请选择服务提供商" style="width:100%" filterable :clearable="true">
             <el-option v-for="(item,key) in modelProviderOptions" :key="key" :label="item.label" :value="item.value" />
@@ -140,6 +145,9 @@
         <el-descriptions-item label="模型">
           {{ detailFrom.model.modelName }}
         </el-descriptions-item>
+<!--        <el-descriptions-item label="智能体">-->
+<!--          {{ detailFrom.model.modelName }}-->
+<!--        </el-descriptions-item>-->
         <el-descriptions-item label="历史记录">
           {{ detailFrom.histories }}
         </el-descriptions-item>
@@ -168,6 +176,7 @@
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ref, reactive } from 'vue'
   import { useAppStore } from "@/pinia"
+  import { getEgoNoramlAgentList } from '@/api/egoclient/egoNormalAgent'
 
 
   defineOptions({
@@ -184,6 +193,7 @@
   // 自动化生成的字典（可能为空）以及字段
   const modelProviderOptions = ref([])
   const modelTypeOptions = ref([])
+  const agentOptions = ref([])
   const formData = ref({
     user: undefined,
     modelProvider: '',
@@ -235,6 +245,7 @@
   const getTableData = async() => {
     const table = await getEgoDialogueList({ page: page.value, pageSize: pageSize.value, ...searchInfo.value })
     if (table.code === 0) {
+      console.log(table.data.list)
       tableData.value = table.data.list
       total.value = table.data.total
       page.value = table.data.page
@@ -312,6 +323,9 @@
 
   // 更新行
   const updateEgoDialogueFunc = async(row) => {
+    const agentRes = await getEgoNoramlAgentList({ page: 0, pageSize: 0})
+    agentOptions.value = agentRes.data.list
+    console.log(agentOptions.value)
     const res = await findEgoDialogue({ ID: row.ID })
     type.value = 'update'
     if (res.code === 0) {

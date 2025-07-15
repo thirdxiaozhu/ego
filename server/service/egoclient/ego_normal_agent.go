@@ -5,6 +5,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/egoclient"
 	egoclientReq "github.com/flipped-aurora/gin-vue-admin/server/model/egoclient/request"
+	"github.com/google/uuid"
 )
 
 type EgoNoramlAgentService struct{}
@@ -12,6 +13,7 @@ type EgoNoramlAgentService struct{}
 // CreateEgoNoramlAgent 创建EGO普通智能体记录
 // Author [yourname](https://github.com/yourname)
 func (ENAService *EgoNoramlAgentService) CreateEgoNoramlAgent(ctx context.Context, ENA *egoclient.EgoNoramlAgent) (err error) {
+	ENA.UUID, _ = uuid.NewV6()
 	err = global.GVA_DB.Create(ENA).Error
 	return err
 }
