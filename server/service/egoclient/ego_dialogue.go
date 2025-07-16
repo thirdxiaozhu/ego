@@ -24,12 +24,6 @@ func (EDService *EgoDialogueService) CreateEgoDialogue(ctx context.Context, user
 	ED.UserID = userid
 	ED.UUID, _ = uuid.NewV6()
 
-	//emService := EgoModelService{}
-	//_, err = emService.GetEgoModel(ctx, strconv.Itoa(ED.ModelID))
-	//if err != nil {
-	//	return err
-	//}
-
 	err = global.GVA_DB.Create(ED).Error
 
 	if ED.AgentID != nil {

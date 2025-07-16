@@ -55,6 +55,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/ArtisanCloud/PowerLibs/v3 v3.3.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/JalfResi/justext v0.0.0-20221106200834-be571e3e3052 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
@@ -74,6 +75,7 @@ require (
 	github.com/casbin/govaluate v1.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect
+	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -139,6 +141,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
 	github.com/otiai10/gosseract/v2 v2.2.4 // indirect
 	github.com/otiai10/mint v1.6.3 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -172,6 +175,8 @@ require (
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
+	go.opentelemetry.io/otel v1.29.0 // indirect
+	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/arch v0.13.0 // indirect
@@ -184,6 +189,7 @@ require (
 	golang.org/x/tools v0.33.0 // indirect
 	google.golang.org/protobuf v1.36.3 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/hints v1.1.2 // indirect
 	gorm.io/plugin/dbresolver v1.5.3 // indirect
@@ -196,7 +202,10 @@ require (
 
 require (
 	code.sajari.com/docconv v1.3.8
+	github.com/ArtisanCloud/PowerWeChat/v3 v3.4.20
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/liusuxian/go-aisdk v0.0.0
+	github.com/wechatpay-apiv3/wechatpay-go v0.2.21
 )
 
 replace github.com/liusuxian/go-aisdk => ./utils/go-aisdk
