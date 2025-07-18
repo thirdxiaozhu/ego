@@ -6,4 +6,5 @@ type ServiceGroup struct {
 	EgoModelService
 	EgoNewsService
 	EgoNoramlAgentService
+	EgoPromptService
 }

@@ -8,8 +8,8 @@ import (
 
 func bizModel() (err error) {
 	db := global.GVA_DB
-	//err = db.AutoMigrate(egoclient.EgoClientUser{}, egoclient.EgoDialogue{}, egoclient.EgoModel{}, egoclient.EgoDialogueHistory{}, egoclient.EgoDialogueItem{}, egoclient.EgoVipStatus{}, egoclient.EgoModelRecord{}, egoclient.EgoNews{}, egoclient.EgoUserNewsView{}, egoclient.EgoNoramlAgent{})
-	err = db.AutoMigrate(system.EgoVipStatus{}, egoclient.EgoDialogue{}, egoclient.EgoModel{}, egoclient.EgoDialogueHistory{}, egoclient.EgoDialogueItem{}, egoclient.EgoModelRecord{}, egoclient.EgoNews{}, egoclient.EgoUserNewsView{}, egoclient.EgoNoramlAgent{})
+	err = db.AutoMigrate(system.EgoVipStatus{}, egoclient.EgoDialogue{}, egoclient.EgoModel{}, egoclient.EgoDialogueHistory{}, egoclient.EgoDialogueItem{}, egoclient.EgoModelRecord{}, egoclient.EgoNews{}, egoclient.EgoUserNewsView{}, egoclient.EgoNoramlAgent{}, //err = db.AutoMigrate(egoclient.EgoClientUser{}, egoclient.EgoDialogue{}, egoclient.EgoModel{}, egoclient.EgoDialogueHistory{}, egoclient.EgoDialogueItem{}, egoclient.EgoVipStatus{}, egoclient.EgoModelRecord{}, egoclient.EgoNews{}, egoclient.EgoUserNewsView{}, egoclient.EgoNoramlAgent{})
+		egoclient.EgoPrompt{})
 	if err != nil {
 		return
 	}

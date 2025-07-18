@@ -8,6 +8,7 @@ type ApiGroup struct {
 	EgoModelApi
 	EgoNewsApi
 	EgoNoramlAgentApi
+	EgoPromptApi
 }
 
 var (
@@ -16,4 +17,5 @@ var (
 	EMService  = service.ServiceGroupApp.EgoclientServiceGroup.EgoModelService
 	ENService  = service.ServiceGroupApp.EgoclientServiceGroup.EgoNewsService
 	ENAService = service.ServiceGroupApp.EgoclientServiceGroup.EgoNoramlAgentService
+	EPService  = service.ServiceGroupApp.EgoclientServiceGroup.EgoPromptService
 )
